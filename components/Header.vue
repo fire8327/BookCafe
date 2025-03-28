@@ -16,15 +16,15 @@
                 <NuxtLink to="/" class="flex flex-col after:w-0 after:h-px after:bg-sky-500 after:transition-all after:duration-500 hover:after:w-full">О нас</NuxtLink>
                 <NuxtLink to="/" class="flex flex-col after:w-0 after:h-px after:bg-sky-500 after:transition-all after:duration-500 hover:after:w-full">Новости</NuxtLink>
                 <div class="flex items-center gap-2">
-                    <NuxtLink to="/" class="transition-all duration-500 hover:opacity-70">
+                    <NuxtLink to="/" class="transition-all duration-500 hover:opacity-70 flex">
                         <Icon class="text-3xl text-sky-500" name="material-symbols:person"/>
                     </NuxtLink>
-                    <NuxtLink to="/" class="transition-all duration-500 hover:opacity-70">
+                    <NuxtLink to="/" class="transition-all duration-500 hover:opacity-70 flex">
                         <Icon class="text-3xl text-sky-500" name="ic:baseline-shopping-basket"/>
                     </NuxtLink>
                 </div>
             </div>
-            <button class="cursor-pointer lg:hidden">
+            <button class="cursor-pointer flex lg:hidden">
                 <Icon class="text-3xl text-sky-500" name="ic:round-menu"/>
             </button>
         </div>
