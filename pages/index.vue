@@ -103,6 +103,35 @@
             </div>
         </div>
     </div>
+    <div class="flex flex-col gap-6">
+        <p class="mainHeading">Последние новости</p>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300">
+                <img src="/public/images/hero/main.jpg" alt="">
+                <div class="flex flex-col gap-4 p-6">
+                    <p class="text-2xl font-mono font-semibold text-[#131313]/80">Новость 1</p>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores eum animi, saepe odit distinctio minus excepturi nulla eius aliquam rem cumque blanditiis, pariatur consequatur numquam. Amet enim tenetur possimus dolorum?</p>
+                    <NuxtLink to="/" class="py-1.5 px-4 w-fit rounded-lg bg-sky-500 border border-sky-500 text-white transition-all duration-500 hover:text-sky-400 hover:bg-transparent">Читать Новость</NuxtLink>
+                </div>
+            </div>
+            <div class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300">
+                <img src="/public/images/hero/main.jpg" alt="">
+                <div class="flex flex-col gap-4 p-6">
+                    <p class="text-2xl font-mono font-semibold text-[#131313]/80">Новость 2</p>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores eum animi, saepe odit distinctio minus excepturi nulla eius aliquam rem cumque blanditiis, pariatur consequatur numquam. Amet enim tenetur possimus dolorum?</p>
+                    <NuxtLink to="/" class="py-1.5 px-4 w-fit rounded-lg bg-sky-500 border border-sky-500 text-white transition-all duration-500 hover:text-sky-400 hover:bg-transparent">Читать Новость</NuxtLink>
+                </div>
+            </div>
+            <div class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300">
+                <img src="/public/images/hero/main.jpg" alt="">
+                <div class="flex flex-col gap-4 p-6">
+                    <p class="text-2xl font-mono font-semibold text-[#131313]/80">Новость 3</p>
+                    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores eum animi, saepe odit distinctio minus excepturi nulla eius aliquam rem cumque blanditiis, pariatur consequatur numquam. Amet enim tenetur possimus dolorum?</p>
+                    <NuxtLink to="/" class="py-1.5 px-4 w-fit rounded-lg bg-sky-500 border border-sky-500 text-white transition-all duration-500 hover:text-sky-400 hover:bg-transparent">Читать Новость</NuxtLink>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
