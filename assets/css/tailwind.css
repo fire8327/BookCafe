@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    #__nuxt{
+        @apply flex flex-col min-h-screen bg-[#f9f9f9] text-[#131313]/80 text-xl
+    }
+        
+    :root{
+        /* максимальная ширина контента */
+        @apply [--widthContent:1280px]
+        /* Растояние от границы брузера по бокам */
+        [--widthContentMargin:15px] sm:[--widthContentMargin:20px] xl:[--widthContentMargin:30px]
+    }    
+
+    /* Настройка кастомных контейнеров */
+    /* Применение системы гридов для расположения контента в ячейку main или full или в любую другую ячейку между именованными линиями grid*/
+
+    .grid-container{        
+        grid-template-columns: [full-start] minmax(var(--widthContentMargin), 1fr) [main-start] minmax(0, var(--widthContent)) [main-end] minmax(var(--widthContentMargin), 1fr) [full-end];
+        @apply grid
+    }
+
+    .grid-container>*{        
+        @apply col-[main]
+    }    
+
+    .wrapper{ 
+        @apply mr-auto max-w-[var(--widthContent)]
+    }
+
+    .container{        
+        @apply max-w-[var(--widthContent)]
+    } 
+}
+
+.mainHeading {
+    @apply text-3xl text-[#131313] font-semibold font-mono
+}
