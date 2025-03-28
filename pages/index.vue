@@ -1,6 +1,6 @@
 <template>
     <div class="relative w-full overflow-hidden rounded-xl">
-        <img src="/images/hero/main.jpg" alt="" class="w-full h-full object-cover object-center">
+        <img src="/images/hero/main.jpg" alt="" class="w-full h-full object-cover object-center max-md:aspect-[7/11]">
         <div class="absolute inset-0 bg-black/30"></div>
         <div class="absolute inset-0 py-10 px-4 flex justify-center items-center text-center text-white">
             <div class="flex flex-col items-center relative gap-6 w-fit p-4 lg:p-6 max-w-2xl">
@@ -107,10 +107,10 @@
 
 <script setup>
 const images = [
-  '/images/hero/main.jpg',
-  '/images/hero/main.jpg',
-  '/images/hero/main.jpg',
-  '/images/hero/main.jpg'
+  '/images/gallery/1.jpeg',
+  '/images/gallery/2.jpeg',
+  '/images/gallery/3.jpeg',
+  '/images/gallery/4.jpeg'
 ]
 
 const items = ref([])
