@@ -18,22 +18,22 @@
         <p>Здесь время течет иначе: минуты за книгой кажутся часами, а часы за кофе — мгновениями</p>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div
-                class="flex flex-col gap-4 p-4 rounded-xl bg-white border border-gray-200 shadow-[0px_0px_20px_-15px_black]">
+                class="flex flex-col gap-4 p-4 rounded-xl bg-white border border-gray-300 shadow-md transition-all duration-500 hover:-translate-y-2">
                 <p class="text-2xl font-mono font-semibold text-[#131313]/80">Библиотека 📚</p>
                 <p>Уютные залы с диванами и полками книг, которые можно читать бесплатно.</p>
             </div>
             <div
-                class="flex flex-col gap-4 p-4 rounded-xl bg-white border border-gray-200 shadow-[0px_0px_20px_-15px_black]">
+                class="flex flex-col gap-4 p-4 rounded-xl bg-white border border-gray-300 shadow-md transition-all duration-500 hover:-translate-y-2">
                 <p class="text-2xl font-mono font-semibold text-[#131313]/80">Авторский кофе ☕️</p>
                 <p>Эксклюзивные смеси от местных обжарщиков и сезонные напитки с литературными названиями.</p>
             </div>
             <div
-                class="flex flex-col gap-4 p-4 rounded-xl bg-white border border-gray-200 shadow-[0px_0px_20px_-15px_black]">
+                class="flex flex-col gap-4 p-4 rounded-xl bg-white border border-gray-300 shadow-md transition-all duration-500 hover:-translate-y-2">
                 <p class="text-2xl font-mono font-semibold text-[#131313]/80">Ивенты 📖</p>
                 <p>Еженедельные чтения, встречи с авторами и тематические вечера.</p>
             </div>
             <div
-                class="flex flex-col gap-4 p-4 rounded-xl bg-white border border-gray-200 shadow-[0px_0px_20px_-15px_black]">
+                class="flex flex-col gap-4 p-4 rounded-xl bg-white border border-gray-300 shadow-md transition-all duration-500 hover:-translate-y-2">
                 <p class="text-2xl font-mono font-semibold text-[#131313]/80">Коворкинг 💻</p>
                 <p>Тихие уголки с розетками и быстрым Wi-Fi для продуктивной работы.</p>
             </div>
@@ -106,30 +106,30 @@
     <div class="flex flex-col gap-6">
         <p class="mainHeading">Последние новости</p>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300">
-                <img src="/public/images/hero/main.jpg" alt="">
+            <NuxtLink to="/" class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300 group">
+                <img src="/public/images/hero/main.jpg" alt="" class="transition-all duration-500 group-hover:scale-110">
                 <div class="flex flex-col gap-4 p-6">
                     <p class="text-2xl font-mono font-semibold text-[#131313]/80">Новость 1</p>
                     <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores eum animi, saepe odit distinctio minus excepturi nulla eius aliquam rem cumque blanditiis, pariatur consequatur numquam. Amet enim tenetur possimus dolorum?</p>
-                    <NuxtLink to="/" class="py-1.5 px-4 w-fit rounded-lg bg-sky-500 border border-sky-500 text-white transition-all duration-500 hover:text-sky-400 hover:bg-transparent">Читать Новость</NuxtLink>
+                    <NuxtLink to="/" class="peer py-1.5 px-4 w-fit rounded-lg bg-sky-500 border border-sky-500 text-white transition-all duration-500 group-hover:text-sky-400 group-hover:bg-transparent">Читать Новость</NuxtLink>
                 </div>
-            </div>
-            <div class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300">
-                <img src="/public/images/hero/main.jpg" alt="">
+            </NuxtLink>
+            <NuxtLink to="/" class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300 group">
+                <img src="/public/images/hero/main.jpg" alt="" class="transition-all duration-500 group-hover:scale-110">
                 <div class="flex flex-col gap-4 p-6">
                     <p class="text-2xl font-mono font-semibold text-[#131313]/80">Новость 2</p>
                     <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores eum animi, saepe odit distinctio minus excepturi nulla eius aliquam rem cumque blanditiis, pariatur consequatur numquam. Amet enim tenetur possimus dolorum?</p>
-                    <NuxtLink to="/" class="py-1.5 px-4 w-fit rounded-lg bg-sky-500 border border-sky-500 text-white transition-all duration-500 hover:text-sky-400 hover:bg-transparent">Читать Новость</NuxtLink>
+                    <NuxtLink to="/" class="peer py-1.5 px-4 w-fit rounded-lg bg-sky-500 border border-sky-500 text-white transition-all duration-500 group-hover:text-sky-400 group-hover:bg-transparent">Читать Новость</NuxtLink>
                 </div>
-            </div>
-            <div class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300">
-                <img src="/public/images/hero/main.jpg" alt="">
+            </NuxtLink>
+            <NuxtLink to="/" class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300 group">
+                <img src="/public/images/hero/main.jpg" alt="" class="transition-all duration-500 group-hover:scale-110">
                 <div class="flex flex-col gap-4 p-6">
                     <p class="text-2xl font-mono font-semibold text-[#131313]/80">Новость 3</p>
                     <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Maiores eum animi, saepe odit distinctio minus excepturi nulla eius aliquam rem cumque blanditiis, pariatur consequatur numquam. Amet enim tenetur possimus dolorum?</p>
-                    <NuxtLink to="/" class="py-1.5 px-4 w-fit rounded-lg bg-sky-500 border border-sky-500 text-white transition-all duration-500 hover:text-sky-400 hover:bg-transparent">Читать Новость</NuxtLink>
+                    <NuxtLink to="/" class="peer py-1.5 px-4 w-fit rounded-lg bg-sky-500 border border-sky-500 text-white transition-all duration-500 group-hover:text-sky-400 group-hover:bg-transparent">Читать Новость</NuxtLink>
                 </div>
-            </div>
+            </NuxtLink>
         </div>
     </div>
 </template>
