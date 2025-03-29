@@ -16,7 +16,7 @@
                 <NuxtLink to="/about" class="flex flex-col after:w-0 after:h-px after:bg-sky-500 after:transition-all after:duration-500 hover:after:w-full">О нас</NuxtLink>
                 <NuxtLink to="/" class="flex flex-col after:w-0 after:h-px after:bg-sky-500 after:transition-all after:duration-500 hover:after:w-full">Новости</NuxtLink>
                 <div class="flex items-center gap-2">
-                    <NuxtLink to="/" class="transition-all duration-500 hover:opacity-70 flex">
+                    <NuxtLink to="/auth" class="transition-all duration-500 hover:opacity-70 flex">
                         <Icon class="text-3xl text-sky-500" name="material-symbols:person"/>
                     </NuxtLink>
                     <NuxtLink to="/" class="transition-all duration-500 hover:opacity-70 flex">
@@ -28,9 +28,14 @@
                 <Icon class="text-3xl text-sky-500" name="ic:round-menu"/>
             </button>
         </div>
+        <button type="button" @click="messageTitle = null" class="fixed top-10 right-10 z-[11] cursor-pointer flex items-center gap-2 px-6 py-2 text-lg rounded-xl w-fit font-medium font-mono bg-white border border-[#131313]/10 shadow-[0px_0px_13px_-7px_#131313]" :class="messageType ? ' text-[#131313]/80' : 'text-red-500'" v-if="messageTitle">
+            <Icon class="text-3xl" name="material-symbols:close-small-rounded"/>
+            <span>{{messageTitle}}</span>
+        </button>
     </header>
 </template>
 
 <script setup>
-
+/* создание сообщений */
+const { messageTitle, messageType } = storeToRefs(useMessagesStore())
 </script>
