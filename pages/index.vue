@@ -135,6 +135,14 @@
 </template>
 
 <script setup>
+/* название и язык страницы */
+useSeoMeta({
+    title: 'Главная',
+    lang: 'ru'
+})
+
+
+/* логика для блока галереи */
 const images = [
   '/images/gallery/1.jpeg',
   '/images/gallery/2.jpeg',

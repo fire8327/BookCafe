@@ -31,5 +31,9 @@
 </template>
 
 <script setup>
-
+/* название и язык страницы */
+useSeoMeta({
+    title: 'Новости',
+    lang: 'ru'
+})
 </script>
