@@ -30,7 +30,7 @@ export const useUserStore = defineStore("user", () => {
     function logout() {
         authenticated.value = false
         id.value = null
-        /* role.value = null */
+        role.value = null
         showMessage("Успешный выход", true)
         router.push("/")
     }
