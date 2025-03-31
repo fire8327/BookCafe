@@ -5,7 +5,7 @@
                 <Icon class="text-3xl text-sky-500" name="material-symbols:book"/>
                 <span class="font-semibold text-2xl font-mono text-[#131313]/80">BookCafe</span>
             </NuxtLink>
-            <div class="flex items-center gap-6 max-lg:hidden">
+            <div class="flex items-center gap-6 max-lg:flex-col max-lg:py-6 max-lg:px-4 max-lg:w-full max-lg:bg-white max-lg:absolute max-lg:left-0">
                 <form class="relative">
                     <input type="text" class="py-1.5 pl-4 pr-10 rounded-lg border border-gray-200 focus:outline-none">
                     <button class="cursor-pointer absolute top-1/2 -translate-y-1/2 right-2 flex">
