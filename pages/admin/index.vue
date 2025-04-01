@@ -1,7 +1,7 @@
 <template>
-    <!-- Добавление новой услуги -->
+    <!-- Добавление нового товара -->
     <FormKit @submit="addProduct()" type="form" :actions="false" messages-class="hidden" form-class="flex flex-col gap-6 items-center justify-center">
-        <p class="mainHeading w-full">Добавление новой услуги</p>
+        <p class="mainHeading w-full">Добавление нового товара</p>
         <FormKit v-model="productsForm.name" validation="required" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Наименование" name="Наименование" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
         <FormKit validation="required" accept="image/*" @change="(e) => {mainImg = e.target.files[0]; console.log('Выбрано main:', mainImg);}" messages-class="text-[#E9556D] font-mono" type="file" :validation-messages="{required: 'Изображение обязательно'}" label="Изображение" name="mainImg" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
         <FormKit v-model="productsForm.description" validation="required" messages-class="text-[#E9556D] font-mono" type="textarea" placeholder="Описание" name="Описание" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
