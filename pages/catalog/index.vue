@@ -66,7 +66,7 @@ const products = ref([])
 
 // загрузка товаров
 const loadProducts = async () => {
-  const { data } = await supabase.from('products').select('*');
+  const { data } = await supabase.from('products').select('*')
   
   products.value = data.map(product => ({
     ...product,
