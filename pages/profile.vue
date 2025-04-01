@@ -17,6 +17,21 @@
         </FormKit>
     </div>
     <div class="flex flex-col gap-6">
+        <p class="mainHeading">Заказы</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" v-if="carts">
+            <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="cart in carts">
+                <p><span class="font-semibold font-mono text-[#131313]/80">Id заказа:</span> {{ cart.id }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">Статус:</span> {{ cart.status }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">ФИО:</span> {{ cart.users.surname }} {{ cart.users.name }} {{ cart.users.patronymic }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">Номер телефона:</span> {{ cart.users.phone }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">Продукт:</span> {{ cart.products.name }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">Количество:</span> {{ cart.count }}</p>                
+                <p><span class="font-semibold font-mono text-[#131313]/80">Объём:</span> {{ cart.volume }}</p>                
+                <p><span class="font-semibold font-mono text-[#131313]/80">Цена:</span> {{ (cart.count*cart.price).toLocaleString() }} ₽</p>                
+            </div>
+        </div>
+    </div>
+    <div class="flex flex-col gap-6">
         <p class="mainHeading">Выход из аккаунта</p>
         <button @click="logout" class="px-4 py-1.5 border border-sky-500 bg-sky-500 text-white rounded-full w-[160px] text-center transition-all duration-500 hover:text-sky-500 hover:bg-transparent">Выход</button>   
     </div>
@@ -71,6 +86,14 @@ const updateUser = async () => {
         showMessage("Данные обновлены!", true)   
     }
 }
+
+
+/* заказы */
+const { data:carts, error:cartsError } = await supabase
+.from('cart')
+.select('*, products(*), users(*)')   
+.eq('userId', id.value)  
+.eq('status', 'Оформлен')  
 
 
 /* выход из аккаунта */

@@ -12,7 +12,7 @@
                     <p class="mainHeading">{{ product.name }}</p>
                     <p v-if="product.is_bestseller" class="bg-sky-100 text-sky-800 text-sm px-4 py-1 rounded-full">Хит сезона</p>
                 </div>
-                <p class="text-sky-800 font-semibold text-2xl font-mono">{{ product.selectedPrice }} ₽</p>
+                <p class="text-sky-800 font-semibold text-2xl font-mono">{{ product.selectedPrice.toLocaleString() }} ₽</p>
                 <div class="flex flex-col gap-2">
                     <p class="font-semibold text-2xl font-mono text-[#131313]/80">Описание</p>
                     <p>{{ product.description }}</p>
