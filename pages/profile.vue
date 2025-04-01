@@ -21,7 +21,6 @@
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" v-if="carts">
             <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="cart in carts">
                 <p><span class="font-semibold font-mono text-[#131313]/80">Id заказа:</span> {{ cart.id }}</p>
-                <p><span class="font-semibold font-mono text-[#131313]/80">Статус:</span> {{ cart.status }}</p>
                 <p><span class="font-semibold font-mono text-[#131313]/80">ФИО:</span> {{ cart.users.surname }} {{ cart.users.name }} {{ cart.users.patronymic }}</p>
                 <p><span class="font-semibold font-mono text-[#131313]/80">Номер телефона:</span> {{ cart.users.phone }}</p>
                 <p><span class="font-semibold font-mono text-[#131313]/80">Продукт:</span> {{ cart.products.name }}</p>
