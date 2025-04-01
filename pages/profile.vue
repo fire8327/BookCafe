@@ -27,7 +27,7 @@
                 <p><span class="font-semibold font-mono text-[#131313]/80">Продукт:</span> {{ cart.products.name }}</p>
                 <p><span class="font-semibold font-mono text-[#131313]/80">Количество:</span> {{ cart.count }}</p>                
                 <p><span class="font-semibold font-mono text-[#131313]/80">Объём:</span> {{ cart.volume }}</p>                
-                <p><span class="font-semibold font-mono text-[#131313]/80">Цена:</span> {{ (cart.count*cart.price).toLocaleString() }} ₽</p>                
+                <p><span class="font-semibold font-mono text-[#131313]/80">Сумма заказа:</span> {{ (cart.count*cart.price).toLocaleString() }} ₽</p>                
             </div>
         </div>
     </div>
