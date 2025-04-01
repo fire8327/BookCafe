@@ -89,15 +89,20 @@
 </template>
 
 <script setup>
+/* название и язык страницы */
 useSeoMeta({
     title: 'Редактирование товара',
     lang: 'ru'
 })
 
+
+/* инициализация зависимостей */
 const { showMessage } = useMessagesStore()
 const supabase = useSupabaseClient()
 const route = useRoute()
 
+
+/* загрузка данных товара */
 const loadProduct = async () => {
     try {
         const { data, error } = await supabase
@@ -120,10 +125,14 @@ const loadProduct = async () => {
     }
 }
 
+
+/* валидация изображения */
 const imageValidation = computed(() => {
     return !product.value.image ? 'required' : ''
 })
 
+
+/* инициализация формы товара */
 const file = ref({ image: null })
 const product = ref({
     id: '',
@@ -136,6 +145,8 @@ const product = ref({
     image: ''
 })
 
+
+/* управление ценами */
 const addPrice = () => {
     product.value.prices.push({ volume: "", price: "" })
 }
@@ -146,8 +157,12 @@ const removePrice = (index) => {
     }
 }
 
+
+/* состояние отправки формы */
 const isSubmitting = ref(false)
 
+
+/* получение URL изображения */
 const getImageUrl = (folder, filename) => {
     const { data: { publicUrl } } = supabase.storage
         .from('images')
@@ -155,6 +170,8 @@ const getImageUrl = (folder, filename) => {
     return publicUrl
 }
 
+
+/* обновление данных товара */
 const updateProduct = async () => {
     try {
         isSubmitting.value = true
@@ -200,6 +217,8 @@ const updateProduct = async () => {
     }
 }
 
+
+/* загрузка при монтировании */
 onMounted(() => {
     loadProduct()
 })
