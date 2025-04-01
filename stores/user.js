@@ -21,7 +21,7 @@ export const useUserStore = defineStore("user", () => {
     const router = useRouter()
 
     // Функции для входа и выхода из аккаунта
-    function login(userId) {
+    function login(userId, userRole) {
         authenticated.value = true
         id.value = userId
         role.value = userRole

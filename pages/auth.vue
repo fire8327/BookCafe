@@ -62,7 +62,7 @@ const authUser = async() => {
     }
 
     showMessage('Успешный вход!', true)
-    login(users[0].id)
+    login(users[0].id, users[0].role)
     isAuthDisabled.value = false
     router.push('/profile')
 } 
