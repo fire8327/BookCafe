@@ -36,6 +36,25 @@
             <span v-else>Добавление...</span>
         </button>
     </FormKit>
+
+     <!-- Редактирование товаров -->
+     <div class="flex flex-col gap-6">
+        <p class="mainHeading">Редактирование товаров</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="product in products">
+                <div class="flex items-center gap-4 self-end">
+                    <NuxtLink :to="`/admin/edit-${product.id}`">
+                        <Icon class="text-3xl text-amber-500" name="material-symbols:edit-outline" />
+                    </NuxtLink>
+                    <button :disables="isDeleting" :class="{isDeleting : 'opacity-50'}" @click="deleteProduct(product.id)" class="transition-all duration-500">
+                        <Icon class="text-3xl text-red-500" name="material-symbols:delete-forever"/>
+                    </button>
+                </div>
+                <p><span class="font-semibold font-mono text-[#131313]/80">ID:</span> {{ product.id }}</p>            
+                <p><span class="font-semibold font-mono text-[#131313]/80">Продукт:</span> {{ product.name }}</p>            
+            </div>            
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -54,7 +73,7 @@ const { showMessage } = useMessagesStore()
 const supabase = useSupabaseClient()
 
 const products = ref([])
-const productsTitles = ref([])
+const productsNames = ref([])
 const loadProducts = async () => {
     try {
         const { data, error } = await supabase
@@ -65,7 +84,7 @@ const loadProducts = async () => {
         if (error) throw error
         
         products.value = data // Загрузка данных
-        productsTitles.value = [...products.value.map(product => product.name)] // Наименования услуг
+        productsNames.value = [...products.value.map(product => product.name)] // Наименования услуг
 
     } catch (error) {
         console.error('Ошибка загрузки:', error)
@@ -177,6 +196,52 @@ const addProduct = async () => {
         showMessage(error.message || "Ошибка при сохранении", false)
     } finally {
         isSubmitting.value = false
+    }
+}
+
+
+/* удаление товара */
+const isDeleting = ref(false)
+const deleteProduct = async (productId) => {
+    try {
+        isDeleting.value = true
+
+        // 1. Получаем данные товара
+        const { data: productData, error: fetchError } = await supabase
+            .from('products')
+            .select('image')
+            .eq('id', productId)
+            .single()
+
+        if (fetchError) throw fetchError
+
+        // 2. Удаляем изображение (если есть)
+        if (productData.image) {
+            const { error: storageError } = await supabase.storage
+                .from('images')
+                .remove([`products/${productData.image}`])
+
+            if (storageError) throw storageError
+            console.log('Удален файл:', `products/${productData.image}`)
+        }
+
+        // 3. Удаляем запись из БД
+        const { error: deleteError } = await supabase
+            .from('products')
+            .delete()
+            .eq('id', productId)
+
+        if (deleteError) throw deleteError
+
+        // 4. Обновляем список
+        await loadProducts()
+        showMessage('Товар удален!', true)
+
+    } catch (error) {
+        console.error('Ошибка:', error)
+        showMessage(`Ошибка удаления: ${error.message}`, false)
+    } finally {
+        isDeleting.value = false
     }
 }
 </script>

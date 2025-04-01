@@ -86,7 +86,7 @@ const isLoading = ref(false)
 const loadProducts = async () => {
     isLoading.value = true   
 
-    let query = supabase.from('products').select('*')
+    let query = supabase.from('products').select('*').order('id', { ascending: true })
 
     if (searchQuery.value) {
       query = query.ilike('name', `%${searchQuery.value}%`)
