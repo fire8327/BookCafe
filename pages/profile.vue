@@ -16,7 +16,7 @@
             <button type="submit" class="px-4 py-1.5 border border-sky-500 bg-sky-500 text-white rounded-full w-[160px] text-center transition-all duration-500 hover:text-sky-500 hover:bg-transparent">Обновить</button>
         </FormKit>
     </div>
-    <div class="flex flex-col gap-6">
+    <div class="flex flex-col gap-6" v-if="role === 'user'">
         <p class="mainHeading">Заказы</p>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" v-if="carts">
             <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="cart in carts">
@@ -47,7 +47,7 @@ useSeoMeta({
 
 /* подключение БД и проверка пользователя */
 const supabase = useSupabaseClient() 
-const { authenticated, id } = storeToRefs(useUserStore())
+const { authenticated, id, role } = storeToRefs(useUserStore())
 
 const { data:users, error:usersError } = await supabase
 .from('users')

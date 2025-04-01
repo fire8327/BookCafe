@@ -19,6 +19,9 @@
                     <NuxtLink to="/auth" class="transition-all duration-500 hover:opacity-70 flex">
                         <Icon class="text-3xl text-sky-500" name="material-symbols:person"/>
                     </NuxtLink>
+                    <NuxtLink v-if="authenticated && role === 'admin'" to="/admin" class="transition-all duration-500 hover:opacity-70 flex">
+                        <Icon class="text-3xl text-sky-500" name="material-symbols:admin-panel-settings"/>
+                    </NuxtLink>
                     <NuxtLink to="/cart" class="transition-all duration-500 hover:opacity-70 flex">
                         <Icon class="text-3xl text-sky-500" name="ic:baseline-shopping-basket"/>
                     </NuxtLink>
@@ -37,6 +40,10 @@
 </template>
 
 <script setup>
+/* проверка входа */
+const { authenticated, role } = storeToRefs(useUserStore())
+
+
 /* открытие мобильного меню */
 const isMenuShow = ref(false) 
 
