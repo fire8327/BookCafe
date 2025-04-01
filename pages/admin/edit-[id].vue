@@ -55,10 +55,10 @@
                     <Icon class="text-3xl text-red-500" name="material-symbols:delete-forever-rounded" />
                 </button>
             </div>
-            <FormKit :name="`volume_${index}`" v-model="product.prices[index].volume" validation="required"
+            <FormKit :name="`Объём ${index}`" v-model="product.prices[index].volume" validation="required"
                 messages-class="text-[#E9556D] font-mono" type="text" placeholder="Объём" outer-class="w-full"
                 input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md" />
-            <FormKit :name="`price_${index}`" v-model="product.prices[index].price" validation="required|number"
+            <FormKit :name="`Цена ${index}`" v-model="product.prices[index].price" validation="required|number"
                 messages-class="text-[#E9556D] font-mono" type="text" placeholder="Цена" outer-class="w-full"
                 input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md" />
         </div>
