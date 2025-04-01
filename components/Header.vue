@@ -6,9 +6,9 @@
                 <span class="font-semibold text-2xl font-mono text-[#131313]/80">BookCafe</span>
             </NuxtLink>
             <div class="flex items-center gap-6 transition-all duration-500 z-[5] max-lg:flex-col max-lg:py-6 max-lg:px-4 max-lg:w-full max-lg:bg-white max-lg:absolute max-lg:left-0 max-lg:border-t border-[#131313]/80" :class="isMenuShow ? 'max-lg:top-full' : 'max-lg:top-0 max-lg:-translate-y-full'">
-                <form class="relative">
-                    <input type="text" class="py-1.5 pl-4 pr-10 rounded-lg border border-gray-200 focus:outline-none">
-                    <button class="cursor-pointer absolute top-1/2 -translate-y-1/2 right-2 flex">
+                <form @submit.prevent="handleSearch" class="relative">
+                    <input v-model="searchQuery" type="text" class="py-1.5 pl-4 pr-10 rounded-lg border border-gray-200 focus:outline-none">
+                    <button type="submit" class="cursor-pointer absolute top-1/2 -translate-y-1/2 right-2 flex">
                         <Icon class="text-3xl text-sky-500" name="material-symbols-light:search"/>
                     </button>
                 </form>
@@ -50,4 +50,22 @@ nuxtApp.hook('page:start', () => {
 
 /* создание сообщений */
 const { messageTitle, messageType } = storeToRefs(useMessagesStore())
+
+
+/* реализация поиска */
+const router = useRouter()
+const route = useRoute()
+const searchStore = useSearchStore()
+
+const { searchQuery } = storeToRefs(searchStore)
+
+const handleSearch = () => {
+  // если на странице каталога  
+  if (!searchQuery.value.trim()) return
+  
+  // если не страница каталога
+  if (route.path !== '/catalog') {
+    router.push('/catalog')
+  }
+}
 </script>

@@ -59,26 +59,51 @@ useSeoMeta({
 const { showMessage } = useMessagesStore()
 
 
-/* подключение БД */
+/* подключение БД и храниилища */
+const { searchQuery } = storeToRefs(useSearchStore())
+const { clearSearchQuery } = useSearchStore()
+
+
 const supabase = useSupabaseClient()
 
 const products = ref([])
+const isLoading = ref(false)
 
 // загрузка товаров
 const loadProducts = async () => {
-  const { data } = await supabase.from('products').select('*')
-  
-  products.value = data.map(product => ({
-    ...product,
-    prices: typeof product.prices === 'string' ? JSON.parse(product.prices) : product.prices,
-    selectedVolume: product.prices[0]?.volume || '',
-    selectedPrice: product.prices[0]?.price || 0
-  }))
+    isLoading.value = true   
+
+    let query = supabase.from('products').select('*')
+
+    if (searchQuery.value) {
+      query = query.ilike('name', `%${searchQuery.value}%`)
+    }
+
+    const { data } = await query
+    
+    products.value = data.map(product => ({
+        ...product,
+        prices: typeof product.prices === 'string' ? JSON.parse(product.prices) : product.prices,
+        selectedVolume: product.prices[0]?.volume || '',
+        selectedPrice: product.prices[0]?.price || 0
+    }))
+
+    isLoading.value = false
 }
 
+// реакция на изменение поискового запроса
+watch(searchQuery, () => {
+  loadProducts()
+})
+
+// первоначальная загрузка
 onMounted(() => {
   loadProducts()
 })
+
+// сброс поиска при уходе со страницы
+onBeforeUnmount(clearSearchQuery)
+
 
 /* изменение объема */
 const changeVolume = (product, volume) => {
