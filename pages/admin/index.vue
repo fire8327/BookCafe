@@ -51,7 +51,7 @@
                     </button>
                 </div>
                 <p><span class="font-semibold font-mono text-[#131313]/80">ID:</span> {{ product.id }}</p>            
-                <p><span class="font-semibold font-mono text-[#131313]/80">Продукт:</span> {{ product.name }}</p>            
+                <p><span class="font-semibold font-mono text-[#131313]/80">Товар:</span> {{ product.name }}</p>            
             </div>            
         </div>
     </div>
