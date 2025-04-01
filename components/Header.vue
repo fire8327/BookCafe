@@ -19,7 +19,7 @@
                     <NuxtLink to="/auth" class="transition-all duration-500 hover:opacity-70 flex">
                         <Icon class="text-3xl text-sky-500" name="material-symbols:person"/>
                     </NuxtLink>
-                    <NuxtLink to="/" class="transition-all duration-500 hover:opacity-70 flex">
+                    <NuxtLink to="/cart" class="transition-all duration-500 hover:opacity-70 flex">
                         <Icon class="text-3xl text-sky-500" name="ic:baseline-shopping-basket"/>
                     </NuxtLink>
                 </div>
