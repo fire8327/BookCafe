@@ -1,7 +1,7 @@
 <template>
     <div class="flex flex-col gap-6">
         <p class="mainHeading">О компании</p>
-        <div class="flex items-center gap-6">
+        <div class="flex max-lg:flex-col items-center gap-6">
             <ul class="flex flex-col gap-4 list-inside list-disc w-full lg:w-1/2">
                 <span class="text-2xl font-mono font-semibold text-[#131313]/80">Мы — не просто кофейня, а место для вдохновения, работы и отдыха. Здесь вы можете:</span>
                 <li>Насладиться авторским кофе из свежеобжаренных зерен</li>
