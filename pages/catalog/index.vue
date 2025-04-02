@@ -15,13 +15,13 @@
                     <div class="relative">
                         <img :src="`https://hsstubxrevlevagsvktq.supabase.co/storage/v1/object/public/images/products/${product.image}`" alt=""
                             class="aspect-[3/4] object-cover w-full transition-all duration-500 group-hover:scale-105">
-                        <p v-if="product.is_bestseller"
-                            class="absolute top-2 left-2 bg-sky-500 text-white text-xs font-semibold py-1 px-4 rounded-full">
-                            Хит сезона</p>
-                        <div class="absolute top-2 right-2 flex items-center gap-1 p-1 rounded-lg bg-gray-800">
-                            <Icon class="text-lg text-white" name="material-symbols:book-2-rounded" />
-                            <p class="text-xs font-medium text-white">{{ product.book_pair.title }}</p>
-                        </div>
+                            <div class="flex flex-col gap-2 absolute top-2 left-2">
+                                <div class="flex items-center gap-1 p-1 rounded-lg bg-gray-800">
+                                    <Icon class="text-lg text-white" name="material-symbols:book-2-rounded" />
+                                    <p class="text-xs font-medium text-white">{{ product.book_pair.title }}</p>
+                                </div>
+                                <p v-if="product.is_bestseller" class="w-fit bg-sky-500 text-white text-xs font-semibold py-1 px-4 rounded-full">Хит сезона</p>
+                            </div>
                         <NuxtLink :to="`/catalog/product-${product.id}`"
                             class="absolute bottom-2 right-2 text-white transition-all duration-500 hover:opacity-70">
                             <Icon class="text-3xl" name="material-symbols:eye-tracking-rounded" />
@@ -42,11 +42,12 @@
                         </div>
                         <div class="flex flex-col gap-2">
                             <p class="text-sky-800 font-semibold text-xl font-mono">{{ product.selectedPrice.toLocaleString() }} ₽</p>
-                            <button @click="addCart(product)" v-if="authenticated"
+                            <button @click="addCart(product)" v-if="authenticated && role === 'user'"
                                 class="cursor-pointer flex items-center gap-2 rounded-xl py-1.5 px-4 transition-all duration-500 bg-sky-600 hover:bg-sky-800 text-white w-fit">
                                 <Icon class="text-2xl" name="material-symbols:add" />
                                 <span>Добавить</span>
                             </button>
+                            <p v-else class="text-sm font-medium">*Пожалуйста, войдите в аккаунт для оформления заказа</p>
                         </div>
                     </div>
                 </div>
@@ -132,7 +133,7 @@ const changeVolume = (product, volume) => {
 
 
 /* добавление в корзину и проверка входа */
-const { id, authenticated } = storeToRefs(useUserStore())
+const { id, authenticated, role } = storeToRefs(useUserStore())
 const addCart = async (product) => {
     const { data: carts } = await supabase
     .from('cart')

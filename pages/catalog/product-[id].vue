@@ -33,10 +33,11 @@
                     <p class="font-semibold font-mono text-[#131313]/80">Книжная пара</p>
                     <p>{{ product.book_pair.description }}</p>   
                 </div>
-                <button @click="addCart(product)" class="cursor-pointer flex items-center gap-2 rounded-xl py-1.5 px-10 transition-all duration-500 bg-sky-600 hover:bg-sky-800 text-white w-fit">
+                <button v-if="authenticated && role === 'user'" @click="addCart(product)" class="cursor-pointer flex items-center gap-2 rounded-xl py-1.5 px-10 transition-all duration-500 bg-sky-600 hover:bg-sky-800 text-white w-fit">
                     <Icon class="text-2xl" name="material-symbols:add"/>
                     <span>В корзину</span>
                 </button>
+                <p v-else class="text-sm font-medium">*Пожалуйста, войдите в аккаунт для оформления заказа</p>
             </div>
         </div>
     </div>
@@ -102,7 +103,7 @@ const changeVolume = (product, volume) => {
 
 
 /* добавление в корзину и проверка входа */
-const { id, authenticated } = storeToRefs(useUserStore())
+const { id, authenticated, role } = storeToRefs(useUserStore())
 const addCart = async (product) => {
     const { data: carts } = await supabase
     .from('cart')
