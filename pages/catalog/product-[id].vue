@@ -6,7 +6,7 @@
             <p class="text-sky-800">{{ product.name }}</p>
         </div>
         <div class="flex max-lg:flex-col lg:items-start gap-8 w-full">
-            <img :src="`https://hsstubxrevlevagsvktq.supabase.co/storage/v1/object/public/images/products/${product.image}`" alt="" class="w-full lg:w-1/2 aspect-[7/8] object-cover rounded-xl">
+            <img :src="`https://sojfmnpdhftqapdircew.supabase.co/storage/v1/object/public/images/products/${product.image}`" alt="" class="w-full lg:w-1/2 aspect-[7/8] object-cover rounded-xl">
             <div class="flex flex-col gap-4 w-full lg:w-1/2">
                 <div class="flex items-center justify-between gap-4">
                     <p class="mainHeading">{{ product.name }}</p>
@@ -45,7 +45,7 @@
         <p class="mainHeading">Рекомендуем также</p>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <NuxtLink :to="`/catalog/product-${product.id}`" class="flex flex-col rounded-xl overflow-hidden shadow-md transition-all duration-500 group hover:-translate-y-2" v-for="product in randomProducts">
-                <img :src="`https://hsstubxrevlevagsvktq.supabase.co/storage/v1/object/public/images/products/${product.image}`" alt="" class="w-full aspect-[7/8] object-cover">
+                <img :src="`https://sojfmnpdhftqapdircew.supabase.co/storage/v1/object/public/images/products/${product.image}`" alt="" class="w-full aspect-[7/8] object-cover">
                 <div class="flex flex-col gap-2 p-4 grow">
                     <span class="font-semibold font-mono text-[#131313]/80">{{ product.name }}</span>
                     <span class="line-clamp-2 mt-auto">{{ product.description }}</span>

@@ -9,7 +9,7 @@
                 <div class="flex flex-col gap-4 rounded-xl p-4 border border-gray-200 bg-white" v-for="cart in carts">
                     <p class="text-2xl font-mono font-semibold">{{ cart.products.name }}, {{ cart.volume }}</p>
                     <div class="text-2xl text-sky-500 font-semibold font-mono">{{ cart.price.toLocaleString() }} ₽</div>
-                    <img :src="`https://hsstubxrevlevagsvktq.supabase.co/storage/v1/object/public/images/products/${cart.products.image}`" alt="Изображение товара" class="w-full rounded-xl aspect-[11/12] object-cover">
+                    <img :src="`https://sojfmnpdhftqapdircew.supabase.co/storage/v1/object/public/images/products/${cart.products.image}`" alt="Изображение товара" class="w-full rounded-xl aspect-[11/12] object-cover">
                     <div class="flex items-center gap-2 md:w-1/2">
                         <div class="flex items-center justify-center gap-4 h-full px-4 rounded-xl border border-sky-500 w-1/2">
                             <button :disabled="cart.count<2" @click="minusCard(cart.count, cart.id), cart.count--" :class="{'text-gray-300' : cart.count<2}" class="text-xl">-</button>
