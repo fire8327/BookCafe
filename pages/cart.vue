@@ -29,6 +29,12 @@
             <div class="flex flex-col gap-2 font-medium p-4 rounded-xl bg-white shadow-md">
                 <p v-for="cart in carts">{{ cart.products.name }}</p>
                 <p class="text-xl w-full font-semibold"><span class="font-mono">Итого: </span> {{ total.toLocaleString() }} ₽</p>
+                <p v-if="discountPercent > 0" class="text-sm text-emerald-600">
+                    Скидка {{ discountPercent }}%
+                </p>
+                <p class="text-xl w-full font-semibold" v-if="discountPercent > 0">
+                    <span class="font-mono">К оплате:</span> {{ totalWithDiscount.toLocaleString() }} ₽
+                </p>
             </div>
             <FormKit type="form" @submit="makeOrder" :actions="false" messages-class="hidden" form-class="flex flex-col gap-4 w-full items-center">
                 <div class="flex items-start gap-2 w-full">
@@ -58,6 +64,13 @@ useSeoMeta({
 /* проверка входа */
 const { id } = storeToRefs(useUserStore())
 
+/* скидка / статистика */
+const statsStore = useStatsStore()
+onMounted(() => {
+    statsStore.fetchStatsByUserId(id.value)
+})
+const discountPercent = computed(() => statsStore.stats?.discount_percent ?? 0)
+
 
 /* создание сообщений */
 const { showMessage } = useMessagesStore()
@@ -79,6 +92,11 @@ const calculateTotal = () => {
     return carts.value.reduce((acc, { count, price }) => acc + count * price, 0)
 }
 const total = ref(calculateTotal())
+const totalWithDiscount = computed(() => {
+    const d = Number(discountPercent.value || 0)
+    const t = Number(total.value || 0)
+    return Math.max(0, Math.round(t * (1 - d / 100)))
+})
 
 const updateCount = async (newCount, id) => {
     const { data, error } = await supabase
@@ -126,6 +144,17 @@ const deleteProduct = async (idBase, idArray) => {
 /* оформление заказа и роутер */
 const router = useRouter()
 const makeOrder = async () => {
+    // применяем скидку к цене позиции, чтобы сумма в истории была уже со скидкой
+    if (discountPercent.value > 0) {
+        for (const row of carts.value) {
+            const newPrice = Math.round(Number(row.price) * (1 - discountPercent.value / 100))
+            await supabase
+            .from('cart')
+            .update({ price: newPrice })
+            .eq('id', row.id)
+        }
+    }
+
     const { data, error } = await supabase
     .from('cart')
     .update({ status: 'Оформлен' })
