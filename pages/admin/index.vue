@@ -37,62 +37,99 @@
         </button>
     </FormKit>
 
-     <!-- Редактирование товаров -->
-     <div class="flex flex-col gap-6">
-        <p class="mainHeading">Редактирование товаров</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="product in products">
-                <div class="flex items-center gap-4 self-end">
-                    <NuxtLink :to="`/admin/edit-${product.id}`">
-                        <Icon class="text-3xl text-amber-500" name="material-symbols:edit-outline" />
-                    </NuxtLink>
-                    <button :disables="isDeleting" :class="{isDeleting : 'opacity-50'}" @click="deleteProduct(product.id)" class="transition-all duration-500">
-                        <Icon class="text-3xl text-red-500" name="material-symbols:delete-forever"/>
-                    </button>
-                </div>
-                <p><span class="font-semibold font-mono text-[#131313]/80">ID:</span> {{ product.id }}</p>            
-                <p><span class="font-semibold font-mono text-[#131313]/80">Товар:</span> {{ product.name }}</p>            
-            </div>            
-        </div>
+    <!-- Редактирование товаров -->
+<div class="flex flex-col gap-6">
+    <p class="mainHeading">Редактирование товаров</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="product in paginatedProducts" :key="product.id">
+            <div class="flex items-center gap-4 self-end">
+                <NuxtLink :to="`/admin/edit-${product.id}`">
+                    <Icon class="text-3xl text-amber-500" name="material-symbols:edit-outline" />
+                </NuxtLink>
+                <button :disabled="isDeleting" :class="{ 'opacity-50': isDeleting }" @click="deleteProduct(product.id)" class="transition-all duration-500">
+                    <Icon class="text-3xl text-red-500" name="material-symbols:delete-forever"/>
+                </button>
+            </div>
+            <p><span class="font-semibold font-mono text-[#131313]/80">ID:</span> {{ product.id }}</p>            
+            <p><span class="font-semibold font-mono text-[#131313]/80">Товар:</span> {{ product.name }}</p>            
+        </div>            
     </div>
 
-    <!-- Статистика пользователей -->
-    <div class="flex flex-col gap-6 mt-10">
-        <p class="mainHeading">Статистика пользователей</p>
-        <div v-if="loadingUserStats" class="text-[#131313]/80">Загрузка...</div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div v-for="u in nonAdminUsers" :key="u.id" class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-2">
-                <p class="font-semibold text-[#131313]/80">{{ u.surname }} {{ u.name }} {{ u.patronymic }}</p>
-                <p class="text-sm text-[#131313]/80">ID: {{ u.id }}</p>
-                <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
-                    <div>
-                        <div class="text-[#131313]/80">Скидка</div>
-                        <div class="font-semibold">{{ userStats[u.id]?.discount_percent ?? 0 }}%</div>
-                    </div>
-                    <div>
-                        <div class="text-[#131313]/80">Покупок всего</div>
-                        <div class="font-semibold">{{ userStats[u.id]?.orders_count ?? 0 }}</div>
-                    </div>
-                    <div>
-                        <div class="text-[#131313]/80">Потрачено</div>
-                        <div class="font-semibold">{{ Number(userStats[u.id]?.total_spent ?? 0).toLocaleString() }} ₽</div>
-                    </div>
-                    <div>
-                        <div class="text-[#131313]/80">В месяц</div>
-                        <div class="font-semibold">{{ userStats[u.id]?.avg_purchases_per_month ?? 0 }}</div>
-                    </div>
-                    <div>
-                        <div class="text-[#131313]/80">Последняя покупка</div>
-                        <div class="font-semibold">{{ userStats[u.id]?.last_order_at ? new Date(userStats[u.id].last_order_at).toLocaleDateString('ru-RU') : '—' }}</div>
-                    </div>
-                    <div>
-                        <div class="text-[#131313]/80">Дней в сервисе</div>
-                        <div class="font-semibold">{{ userStats[u.id]?.days_in_service ?? 0 }}</div>
-                    </div>
+    <!-- Пагинация товаров -->
+    <div v-if="totalProductsPages > 1" class="flex justify-center items-center gap-4 mt-4">
+        <button 
+            @click="prevProductsPage" 
+            :disabled="productsPage === 1"
+            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+        >
+            Назад
+        </button>
+        <span class="text-lg font-mono">{{ productsPage }} / {{ totalProductsPages }}</span>
+        <button 
+            @click="nextProductsPage" 
+            :disabled="productsPage === totalProductsPages"
+            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+        >
+            Вперёд
+        </button>
+    </div>
+</div>
+
+<!-- Статистика пользователей -->
+<div class="flex flex-col gap-6 mt-10">
+    <p class="mainHeading">Статистика пользователей</p>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div v-for="u in paginatedUsers" :key="u.id" class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-2">
+            <p class="font-semibold text-[#131313]/80">{{ u.surname }} {{ u.name }} {{ u.patronymic }}</p>
+            <p class="text-sm text-[#131313]/80">ID: {{ u.id }}</p>
+            <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                    <div class="text-[#131313]/80">Скидка</div>
+                    <div class="font-semibold">{{ userStats[u.id]?.discount_percent ?? 0 }}%</div>
+                </div>
+                <div>
+                    <div class="text-[#131313]/80">Покупок всего</div>
+                    <div class="font-semibold">{{ userStats[u.id]?.orders_count ?? 0 }}</div>
+                </div>
+                <div>
+                    <div class="text-[#131313]/80">Потрачено</div>
+                    <div class="font-semibold">{{ Number(userStats[u.id]?.total_spent ?? 0).toLocaleString() }} ₽</div>
+                </div>
+                <div>
+                    <div class="text-[#131313]/80">В месяц</div>
+                    <div class="font-semibold">{{ userStats[u.id]?.avg_purchases_per_month ?? 0 }}</div>
+                </div>
+                <div>
+                    <div class="text-[#131313]/80">Последняя покупка</div>
+                    <div class="font-semibold">{{ userStats[u.id]?.last_order_at ? new Date(userStats[u.id].last_order_at).toLocaleDateString('ru-RU') : '—' }}</div>
+                </div>
+                <div>
+                    <div class="text-[#131313]/80">Дней в сервисе</div>
+                    <div class="font-semibold">{{ userStats[u.id]?.days_in_service ?? 0 }}</div>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Пагинация статистики -->
+    <div v-if="!loadingUserStats && totalUserStatsPages > 1" class="flex justify-center items-center gap-4 mt-4">
+        <button 
+            @click="prevUserStatsPage" 
+            :disabled="userStatsPage === 1"
+            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+        >
+            Назад
+        </button>
+        <span class="text-lg font-mono">{{ userStatsPage }} / {{ totalUserStatsPages }}</span>
+        <button 
+            @click="nextUserStatsPage" 
+            :disabled="userStatsPage === totalUserStatsPages"
+            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+        >
+            Вперёд
+        </button>
+    </div>
+</div>
 </template>
 
 <script setup>
@@ -323,5 +360,50 @@ const deleteProduct = async (productId) => {
     } finally {
         isDeleting.value = false
     }
+}
+
+
+/* Пагинация */
+const productsPage = ref(1)
+const productsPerPage = 8
+
+const userStatsPage = ref(1)
+const userStatsPerPage = 6
+
+// Вычисляемые данные с пагинацией
+const paginatedProducts = computed(() => {
+    const start = (productsPage.value - 1) * productsPerPage
+    return products.value.slice(start, start + productsPerPage)
+})
+
+const paginatedUsers = computed(() => {
+    const start = (userStatsPage.value - 1) * userStatsPerPage
+    return nonAdminUsers.value.slice(start, start + userStatsPerPage)
+})
+
+// Общее количество страниц
+const totalProductsPages = computed(() => {
+    return Math.ceil(products.value.length / productsPerPage)
+})
+
+const totalUserStatsPages = computed(() => {
+    return Math.ceil(nonAdminUsers.value.length / userStatsPerPage)
+})
+
+// Функции навигации
+const prevProductsPage = () => {
+    if (productsPage.value > 1) productsPage.value--
+}
+
+const nextProductsPage = () => {
+    if (productsPage.value < totalProductsPages.value) productsPage.value++
+}
+
+const prevUserStatsPage = () => {
+    if (userStatsPage.value > 1) userStatsPage.value--
+}
+
+const nextUserStatsPage = () => {
+    if (userStatsPage.value < totalUserStatsPages.value) userStatsPage.value++
 }
 </script>
