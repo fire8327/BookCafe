@@ -30,7 +30,7 @@
             </div>
         </div>
     </div>
-    <div class="flex flex-col gap-6" v-if="statsStore.stats">
+    <div class="flex flex-col gap-6" v-if="statsStore.stats && role === 'user'">
         <p class="mainHeading">Статистика</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
