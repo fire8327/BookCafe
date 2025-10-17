@@ -55,6 +55,44 @@
             </div>            
         </div>
     </div>
+
+    <!-- Статистика пользователей -->
+    <div class="flex flex-col gap-6 mt-10">
+        <p class="mainHeading">Статистика пользователей</p>
+        <div v-if="loadingUserStats" class="text-[#131313]/80">Загрузка...</div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div v-for="u in nonAdminUsers" :key="u.id" class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-2">
+                <p class="font-semibold text-[#131313]/80">{{ u.surname }} {{ u.name }} {{ u.patronymic }}</p>
+                <p class="text-sm text-[#131313]/80">ID: {{ u.id }}</p>
+                <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                        <div class="text-[#131313]/80">Скидка</div>
+                        <div class="font-semibold">{{ userStats[u.id]?.discount_percent ?? 0 }}%</div>
+                    </div>
+                    <div>
+                        <div class="text-[#131313]/80">Покупок всего</div>
+                        <div class="font-semibold">{{ userStats[u.id]?.orders_count ?? 0 }}</div>
+                    </div>
+                    <div>
+                        <div class="text-[#131313]/80">Потрачено</div>
+                        <div class="font-semibold">{{ Number(userStats[u.id]?.total_spent ?? 0).toLocaleString() }} ₽</div>
+                    </div>
+                    <div>
+                        <div class="text-[#131313]/80">В месяц</div>
+                        <div class="font-semibold">{{ userStats[u.id]?.avg_purchases_per_month ?? 0 }}</div>
+                    </div>
+                    <div>
+                        <div class="text-[#131313]/80">Последняя покупка</div>
+                        <div class="font-semibold">{{ userStats[u.id]?.last_order_at ? new Date(userStats[u.id].last_order_at).toLocaleDateString('ru-RU') : '—' }}</div>
+                    </div>
+                    <div>
+                        <div class="text-[#131313]/80">Дней в сервисе</div>
+                        <div class="font-semibold">{{ userStats[u.id]?.days_in_service ?? 0 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 
 <script setup>
@@ -131,6 +169,48 @@ const removePrice = (index) => {
     }
 }
 
+
+/* статистика пользователей (не админы) */
+const statsStore = useStatsStore()
+const nonAdminUsers = ref([])
+const userStats = ref({})
+const loadingUserStats = ref(false)
+
+const loadNonAdminUsers = async () => {
+    const { data, error } = await supabase
+    .from('users')
+    .select('id, surname, name, patronymic, role, created_at')
+    .neq('role', 'admin')
+    .order('id', { ascending: true })
+
+    if (error) {
+        showMessage('Не удалось загрузить пользователей', false)
+        return
+    }
+    nonAdminUsers.value = data || []
+}
+
+const computeStatsForUsers = async () => {
+    loadingUserStats.value = true
+    try {
+        const results = {}
+        for (const u of nonAdminUsers.value) {
+            const s = await statsStore.fetchStatsByUserId(u.id)
+            results[u.id] = s
+        }
+        userStats.value = results
+    } finally {
+        loadingUserStats.value = false
+    }
+}
+
+watch(nonAdminUsers, async (list) => {
+    if (list && list.length) await computeStatsForUsers()
+})
+
+onMounted(async () => {
+    await loadNonAdminUsers()
+})
 
 /* добавление данных */
 // реактивная переменная для отслеживания состояния отправки
