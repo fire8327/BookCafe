@@ -34,10 +34,28 @@ export const useStatsStore = defineStore('stats', () => {
             .select('id, created_at, count, price, status')
             .eq('userId', userId)
             .eq('status', 'Оформлен')
+            .order('created_at', { ascending: true })
 
             if (cartErr) throw cartErr
 
             const paidItems = Array.isArray(cartRows) ? cartRows : []
+
+            // Группируем позиции по заказам (по времени создания с точностью до минуты)
+            const orderGroups = new Map()
+            
+            paidItems.forEach(item => {
+                const orderTime = new Date(item.created_at)
+                // Округляем до минуты для группировки заказов
+                const orderKey = new Date(orderTime.getFullYear(), orderTime.getMonth(), orderTime.getDate(), orderTime.getHours(), orderTime.getMinutes())
+                
+                if (!orderGroups.has(orderKey.getTime())) {
+                    orderGroups.set(orderKey.getTime(), [])
+                }
+                orderGroups.get(orderKey.getTime()).push(item)
+            })
+
+            const orders = Array.from(orderGroups.values())
+            const ordersCount = orders.length
 
             const totalSpent = paidItems.reduce((acc, row) => {
                 const price = Number(row?.price ?? 0)
@@ -45,20 +63,12 @@ export const useStatsStore = defineStore('stats', () => {
                 return acc + price * count
             }, 0)
 
-            const ordersCount = paidItems.length
-
-            const lastOrderAt = paidItems.length
-                ? paidItems.reduce((max, r) => {
-                    const d = new Date(r.created_at)
-                    return d > max ? d : max
-                }, new Date(paidItems[0].created_at))
+            const lastOrderAt = orders.length
+                ? orders[orders.length - 1][0].created_at
                 : null
 
-            const firstOrderAt = paidItems.length
-                ? paidItems.reduce((min, r) => {
-                    const d = new Date(r.created_at)
-                    return d < min ? d : min
-                }, new Date(paidItems[0].created_at))
+            const firstOrderAt = orders.length
+                ? orders[0][0].created_at
                 : null
 
             const monthsBetween = (start, end) => {
@@ -74,7 +84,17 @@ export const useStatsStore = defineStore('stats', () => {
                 ? 0
                 : Math.round((ordersCount / monthsBetween(firstOrderAt, new Date())) * 100) / 100
 
-            const discountPercent = Math.min(20, Math.floor(totalSpent / 1000))
+            // Новая логика скидки по уровням клиента
+            let discountPercent = 5 // Стандартный
+            let clientLevel = 'Стандартный'
+            
+            if (totalSpent >= 50001) {
+                discountPercent = 15
+                clientLevel = 'Золотой'
+            } else if (totalSpent >= 20001) {
+                discountPercent = 10
+                clientLevel = 'Серебряный'
+            }
 
             const daysInService = userRow?.created_at
                 ? Math.max(0, Math.floor((Date.now() - new Date(userRow.created_at).getTime()) / (1000 * 60 * 60 * 24)))
@@ -84,9 +104,10 @@ export const useStatsStore = defineStore('stats', () => {
                 user_id: userId,
                 total_spent: totalSpent,
                 orders_count: ordersCount,
-                last_order_at: lastOrderAt ? lastOrderAt.toISOString() : null,
+                last_order_at: lastOrderAt,
                 avg_purchases_per_month: avgPurchasesPerMonth,
                 discount_percent: discountPercent,
+                client_level: clientLevel,
                 days_in_service: daysInService
             }
 

@@ -82,11 +82,15 @@
         <div v-for="u in paginatedUsers" :key="u.id" class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-2">
             <p class="font-semibold text-[#131313]/80">{{ u.surname }} {{ u.name }} {{ u.patronymic }}</p>
             <p class="text-sm text-[#131313]/80">ID: {{ u.id }}</p>
-            <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
-                <div>
-                    <div class="text-[#131313]/80">Скидка</div>
-                    <div class="font-semibold">{{ userStats[u.id]?.discount_percent ?? 0 }}%</div>
-                </div>
+             <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                 <div>
+                     <div class="text-[#131313]/80">Уровень</div>
+                     <div class="font-semibold" :class="getLevelColor(userStats[u.id]?.client_level)">{{ userStats[u.id]?.client_level ?? 'Стандартный' }}</div>
+                 </div>
+                 <div>
+                     <div class="text-[#131313]/80">Скидка</div>
+                     <div class="font-semibold">{{ userStats[u.id]?.discount_percent ?? 5 }}%</div>
+                 </div>
                 <div>
                     <div class="text-[#131313]/80">Покупок всего</div>
                     <div class="font-semibold">{{ userStats[u.id]?.orders_count ?? 0 }}</div>
@@ -403,7 +407,16 @@ const prevUserStatsPage = () => {
     if (userStatsPage.value > 1) userStatsPage.value--
 }
 
-const nextUserStatsPage = () => {
-    if (userStatsPage.value < totalUserStatsPages.value) userStatsPage.value++
-}
+ const nextUserStatsPage = () => {
+     if (userStatsPage.value < totalUserStatsPages.value) userStatsPage.value++
+ }
+
+ const getLevelColor = (level) => {
+     switch(level) {
+         case 'Золотой': return 'text-yellow-600'
+         case 'Серебряный': return 'text-gray-600'
+         case 'Стандартный': return 'text-blue-600'
+         default: return 'text-gray-600'
+     }
+ }
 </script>

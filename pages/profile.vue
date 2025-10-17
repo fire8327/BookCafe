@@ -32,7 +32,26 @@
     </div>
     <div class="flex flex-col gap-6" v-if="statsStore.stats && role === 'user'">
         <p class="mainHeading">Статистика</p>
+        <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
+                <div class="text-base text-[#131313]/80 font-semibold">Уровень клиента</div>
+                <div class="mt-1 text-2xl font-semibold" :class="getLevelColor(statsStore.stats.client_level)">{{ statsStore.stats.client_level }}</div>
+                
+                <!-- Прогресс-бар уровня -->
+                <div class="mt-3">
+                    <div class="flex justify-between text-xs text-[#131313]/60 mb-1">
+                        <span>Прогресс до {{ getNextLevel(statsStore.stats.client_level) }}</span>
+                        <span>{{ formatCurrency(statsStore.stats.total_spent) }} / {{ formatCurrency(getNextLevelThreshold(statsStore.stats.client_level)) }}</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="h-2 rounded-full transition-all duration-500" :class="getProgressBarColor(statsStore.stats.client_level)" :style="`width: ${getProgressPercentage(statsStore.stats.total_spent, statsStore.stats.client_level)}%`"></div>
+                    </div>
+                    <div class="text-xs text-[#131313]/60 mt-1">
+                        До {{ getNextLevel(statsStore.stats.client_level) }}: {{ formatCurrency(getAmountToNextLevel(statsStore.stats.total_spent, statsStore.stats.client_level)) }}
+                    </div>
+                </div>
+            </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
                 <div class="text-base text-[#131313]/80 font-semibold">Скидка</div>
                 <div class="mt-1 text-2xl font-semibold">{{ statsStore.stats.discount_percent }}%</div>
@@ -138,4 +157,68 @@ onMounted(() => {
 const formatCurrency = (v) =>
   Number(v ?? 0).toLocaleString('ru-RU', { style: 'currency', currency: 'RUB', maximumFractionDigits: 0 })
 const formatDate = (v) => (v ? new Date(v).toLocaleDateString('ru-RU') : '—')
+
+const getLevelColor = (level) => {
+  switch(level) {
+    case 'Золотой': return 'text-yellow-600'
+    case 'Серебряный': return 'text-gray-600'
+    case 'Стандартный': return 'text-blue-600'
+    default: return 'text-gray-600'
+  }
+}
+
+const getNextLevel = (currentLevel) => {
+  switch(currentLevel) {
+    case 'Стандартный': return 'Серебряного'
+    case 'Серебряный': return 'Золотого'
+    case 'Золотой': return 'максимального'
+    default: return 'Серебряного'
+  }
+}
+
+const getNextLevelThreshold = (currentLevel) => {
+  switch(currentLevel) {
+    case 'Стандартный': return 20001
+    case 'Серебряный': return 50001
+    case 'Золотой': return 50001 // Максимальный уровень
+    default: return 20001
+  }
+}
+
+const getCurrentLevelThreshold = (currentLevel) => {
+  switch(currentLevel) {
+    case 'Стандартный': return 0
+    case 'Серебряный': return 20001
+    case 'Золотой': return 50001
+    default: return 0
+  }
+}
+
+const getProgressPercentage = (totalSpent, currentLevel) => {
+  if (currentLevel === 'Золотой') return 100
+  
+  const current = getCurrentLevelThreshold(currentLevel)
+  const next = getNextLevelThreshold(currentLevel)
+  const spent = Math.min(totalSpent, next)
+  
+  const progress = ((spent - current) / (next - current)) * 100
+  return Math.max(0, Math.min(100, progress))
+}
+
+const getAmountToNextLevel = (totalSpent, currentLevel) => {
+  if (currentLevel === 'Золотой') return 0
+  
+  const next = getNextLevelThreshold(currentLevel)
+  const needed = next - totalSpent
+  return Math.max(0, needed)
+}
+
+const getProgressBarColor = (level) => {
+  switch(level) {
+    case 'Золотой': return 'bg-yellow-500'
+    case 'Серебряный': return 'bg-gray-500'
+    case 'Стандартный': return 'bg-blue-500'
+    default: return 'bg-gray-500'
+  }
+}
 </script>
