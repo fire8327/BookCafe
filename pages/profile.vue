@@ -34,27 +34,27 @@
         <p class="mainHeading">Статистика</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
-                <div class="text-base text-[#131313]/80 font-medium">Скидка</div>
+                <div class="text-base text-[#131313]/80 font-semibold">Скидка</div>
                 <div class="mt-1 text-2xl font-semibold">{{ statsStore.stats.discount_percent }}%</div>
             </div>
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
-                <div class="text-base text-[#131313]/80 font-medium">Потрачено всего</div>
+                <div class="text-base text-[#131313]/80 font-semibold">Потрачено всего</div>
                 <div class="mt-1 text-2xl font-semibold">{{ formatCurrency(statsStore.stats.total_spent) }}</div>
             </div>
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
-                <div class="text-base text-[#131313]/80 font-medium">Покупок всего</div>
+                <div class="text-base text-[#131313]/80 font-semibold">Покупок всего</div>
                 <div class="mt-1 text-2xl font-semibold">{{ statsStore.stats.orders_count }}</div>
             </div>
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
-                <div class="text-base text-[#131313]/80 font-medium">Покупок в месяц</div>
+                <div class="text-base text-[#131313]/80 font-semibold">Покупок в месяц</div>
                 <div class="mt-1 text-2xl font-semibold">{{ statsStore.stats.avg_purchases_per_month }}</div>
             </div>
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
-                <div class="text-base text-[#131313]/80 font-medium">Последняя покупка</div>
+                <div class="text-base text-[#131313]/80 font-semibold">Последняя покупка</div>
                 <div class="mt-1 text-2xl font-semibold">{{ formatDate(statsStore.stats.last_order_at) }}</div>
             </div>
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
-                <div class="text-base text-[#131313]/80 font-medium">Дней в сервисе</div>
+                <div class="text-base text-[#131313]/80 font-semibold">Дней в сервисе</div>
                 <div class="mt-1 text-2xl font-semibold">{{ statsStore.stats.days_in_service }}</div>
             </div>
         </div>
