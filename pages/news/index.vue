@@ -1,5 +1,6 @@
 <template>
-   <div class="flex flex-col gap-6">
+    <Loader v-if="isLoading"/>
+    <div v-else class="flex flex-col gap-6">
         <p class="mainHeading">Новости</p>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <NuxtLink v-for="newCard in news" :to="`/news/new-${newCard.id}`" class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300 group">
@@ -25,7 +26,23 @@ useSeoMeta({
 /* подключение БД и вывод данных */
 const supabase = useSupabaseClient()
 
-const { data: news, error } = await supabase
-.from('news')
-.select("*")
+const news = ref([])
+const isLoading = ref(true)
+
+const loadNews = async () => {
+  try {
+    const { data, error } = await supabase
+    .from('news')
+    .select("*")
+    
+    if (error) throw error
+    news.value = data || []
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  loadNews()
+})
 </script>

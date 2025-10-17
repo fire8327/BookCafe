@@ -105,7 +105,10 @@
     </div>
     <div class="flex flex-col gap-6">
         <p class="mainHeading">Последние новости</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div v-if="isLoadingNews" class="flex justify-center items-center min-h-[300px]">
+            <Loader />
+        </div>
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <NuxtLink v-for="newCard in news" :to="`/news/new-${newCard.id}`" class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300 group">
                 <img src="/images/news/main.jpg" alt="" class="transition-all duration-500 group-hover:scale-110">
                 <div class="flex flex-col gap-4 p-6 grow">
@@ -179,9 +182,25 @@ onBeforeUnmount(() => {
 /* подключение БД и вывод данных */
 const supabase = useSupabaseClient()
 
-const { data: news, error } = await supabase
-.from('news')
-.select("*")
-.order('id', {ascending: false})
-.limit(3)
+const news = ref([])
+const isLoadingNews = ref(true)
+
+const loadNews = async () => {
+  try {
+    const { data, error } = await supabase
+    .from('news')
+    .select("*")
+    .order('id', {ascending: false})
+    .limit(3)
+    
+    if (error) throw error
+    news.value = data || []
+  } finally {
+    isLoadingNews.value = false
+  }
+}
+
+onMounted(() => {
+  loadNews()
+})
 </script>

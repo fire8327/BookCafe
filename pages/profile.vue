@@ -1,5 +1,9 @@
 <template>
-    <div class="flex flex-col gap-6">
+    <div v-if="isPageLoading" class="fixed inset-0 bg-white bg-opacity-90 flex justify-center items-center z-50">
+        <Loader />
+    </div>
+    
+    <div v-if="!isPageLoading" class="flex flex-col gap-6">
         <p class="mainHeading">Личные данные</p>
         <FormKit @submit="updateUser" type="form" :actions="false" messages-class="hidden" form-class="text-[#131313]/80 flex flex-col gap-6 items-center justify-center">
             <div class="flex items-center lg:items-start gap-4 max-lg:flex-col w-full md:w-2/3 lg:w-1/2">
@@ -16,7 +20,7 @@
             <button type="submit" class="px-4 py-1.5 border border-sky-500 bg-sky-500 text-white rounded-full w-[160px] text-center transition-all duration-500 hover:text-sky-500 hover:bg-transparent">Обновить</button>
         </FormKit>
     </div>
-    <div class="flex flex-col gap-6" v-if="role === 'user'">
+    <div class="flex flex-col gap-6" v-if="role === 'user' && !isPageLoading">
         <p class="mainHeading">Заказы</p>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" v-if="carts">
             <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="cart in carts">
@@ -30,7 +34,7 @@
             </div>
         </div>
     </div>
-    <div class="flex flex-col gap-6" v-if="statsStore.stats && role === 'user'">
+    <div class="flex flex-col gap-6" v-if="statsStore.stats && role === 'user' && !isPageLoading">
         <p class="mainHeading">Статистика</p>
         <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
                 <div class="text-base text-[#131313]/80 font-semibold">Уровень клиента</div>
@@ -78,7 +82,7 @@
             </div>
         </div>
     </div>
-    <div class="flex flex-col gap-6">
+    <div v-if="!isPageLoading" class="flex flex-col gap-6">
         <p class="mainHeading">Выход из аккаунта</p>
         <button @click="logout" class="px-4 py-1.5 border border-sky-500 bg-sky-500 text-white rounded-full w-[160px] text-center transition-all duration-500 hover:text-sky-500 hover:bg-transparent">Выход</button>   
     </div>
@@ -96,10 +100,35 @@ useSeoMeta({
 const supabase = useSupabaseClient() 
 const { authenticated, id, role } = storeToRefs(useUserStore())
 
-const { data:users, error:usersError } = await supabase
-.from('users')
-.select('*')   
-.eq('id', id.value)  
+const isPageLoading = ref(true)
+const users = ref([])
+const carts = ref([])
+
+const loadUserData = async () => {
+  try {
+    const { data: usersData, error: usersError } = await supabase
+    .from('users')
+    .select('*')   
+    .eq('id', id.value)
+    
+    if (usersError) throw usersError
+    users.value = usersData || []
+    
+    const { data: cartsData, error: cartsError } = await supabase
+    .from('cart')
+    .select('*, products(*), users(*)')   
+    .eq('userId', id.value)  
+    .eq('status', 'Оформлен')
+    
+    if (cartsError) throw cartsError
+    carts.value = cartsData || []
+    
+  } catch (error) {
+    console.error('Ошибка загрузки данных:', error)
+  } finally {
+    isPageLoading.value = false
+  }
+}  
 
 
 /* создание сообщений и роутера */
@@ -109,14 +138,28 @@ const router = useRouter()
 
 /* создание формы пользователя */
 const user = ref({
-    name: users[0].name,
-    surname: users[0].surname,
-    patronymic: users[0].patronymic,
-    login: users[0].login,
-    email: users[0].email,
-    phone: users[0].phone,
-    password: users[0].password
-}) 
+    name: '',
+    surname: '',
+    patronymic: '',
+    login: '',
+    email: '',
+    phone: '',
+    password: ''
+})
+
+const initUserForm = () => {
+  if (users.value && users.value.length > 0) {
+    user.value = {
+      name: users.value[0].name,
+      surname: users.value[0].surname,
+      patronymic: users.value[0].patronymic,
+      login: users.value[0].login,
+      email: users.value[0].email,
+      phone: users.value[0].phone,
+      password: users.value[0].password
+    }
+  }
+} 
 
 
 /* обновление данных */
@@ -135,14 +178,6 @@ const updateUser = async () => {
 }
 
 
-/* заказы */
-const { data:carts, error:cartsError } = await supabase
-.from('cart')
-.select('*, products(*), users(*)')   
-.eq('userId', id.value)  
-.eq('status', 'Оформлен')  
-
-
 /* выход из аккаунта */
 const { logout } = useUserStore()
 
@@ -150,8 +185,10 @@ const { logout } = useUserStore()
 /* логика статистики */
 const statsStore = useStatsStore()
 
-onMounted(() => {
-  statsStore.fetchStatsByUserId(id.value) // или другой userId для админа
+onMounted(async () => {
+  await loadUserData()
+  initUserForm()
+  statsStore.fetchStatsByUserId(id.value)
 })
 
 const formatCurrency = (v) =>

@@ -1,139 +1,142 @@
 <template>
-    <!-- Добавление нового товара -->
-    <FormKit @submit="addProduct()" type="form" :actions="false" messages-class="hidden" form-class="flex flex-col gap-6 items-center justify-center">
-        <p class="mainHeading w-full">Добавление нового товара</p>
-        <FormKit v-model="productsForm.name" validation="required" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Наименование" name="Наименование" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
-        <FormKit validation="required" accept="image/*" @change="(e) => {mainImg = e.target.files[0]; console.log('Выбрано main:', mainImg);}" messages-class="text-[#E9556D] font-mono" type="file" :validation-messages="{required: 'Изображение обязательно'}" label="Изображение" name="mainImg" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
-        <FormKit v-model="productsForm.description" validation="required" messages-class="text-[#E9556D] font-mono" type="textarea" placeholder="Описание" name="Описание" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
-        <FormKit v-model="productsForm.category" validation="required" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Категория" name="Категория" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
-        <div class="flex items-center gap-2 w-full md:w-2/3 lg:w-1/2">
-            <label class="flex items-center cursor-pointer gap-2">
-                <input type="checkbox" class="sr-only peer" v-model="productsForm.is_bestseller"> 
-                <div class="flex items-center p-1 border border-gray-400 rounded-full w-10 peer-checked:border-sky-500 peer-checked:[&>div]:translate-x-[18px] peer-checked:[&>div]:bg-sky-500">
-                    <div class="w-3 h-3 rounded-full bg-gray-400 transition-all duration-500 "></div>
-                </div>                
-                <span class="text-xl font-semibold font-mono text-[#131313]/80">Является бестселлером</span>
-            </label>
-        </div>
-        <div class="flex gap-6 flex-col w-full md:w-2/3 lg:w-1/2 rounded-xl border p-4" v-for="(price, index) in productsForm.prices" :key="index">
-            <div class="flex items-center justify-between gap-4">
-                <p>Объём и цена № {{ index+1 }}</p>
-                <button @click="removePrice(index)" type="button">
-                    <Icon class="text-3xl text-red-500" name="material-symbols:delete-forever-rounded"/>
+    <Loader v-if="isPageLoading"/>
+    <div v-else class="flex flex-col gap-14 md:gap-20 xl:gap-28">
+        <!-- Добавление нового товара -->
+        <FormKit @submit="addProduct()" type="form" :actions="false" messages-class="hidden" form-class="flex flex-col gap-6 items-center justify-center">
+            <p class="mainHeading w-full">Добавление нового товара</p>
+            <FormKit v-model="productsForm.name" validation="required" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Наименование" name="Наименование" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
+            <FormKit validation="required" accept="image/*" @change="(e) => {mainImg = e.target.files[0]; console.log('Выбрано main:', mainImg);}" messages-class="text-[#E9556D] font-mono" type="file" :validation-messages="{required: 'Изображение обязательно'}" label="Изображение" name="mainImg" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
+            <FormKit v-model="productsForm.description" validation="required" messages-class="text-[#E9556D] font-mono" type="textarea" placeholder="Описание" name="Описание" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
+            <FormKit v-model="productsForm.category" validation="required" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Категория" name="Категория" outer-class="w-full md:w-2/3 lg:w-1/2" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
+            <div class="flex items-center gap-2 w-full md:w-2/3 lg:w-1/2">
+                <label class="flex items-center cursor-pointer gap-2">
+                    <input type="checkbox" class="sr-only peer" v-model="productsForm.is_bestseller"> 
+                    <div class="flex items-center p-1 border border-gray-400 rounded-full w-10 peer-checked:border-sky-500 peer-checked:[&>div]:translate-x-[18px] peer-checked:[&>div]:bg-sky-500">
+                        <div class="w-3 h-3 rounded-full bg-gray-400 transition-all duration-500 "></div>
+                    </div>                
+                    <span class="text-xl font-semibold font-mono text-[#131313]/80">Является бестселлером</span>
+                </label>
+            </div>
+            <div class="flex gap-6 flex-col w-full md:w-2/3 lg:w-1/2 rounded-xl border p-4" v-for="(price, index) in productsForm.prices" :key="index">
+                <div class="flex items-center justify-between gap-4">
+                    <p>Объём и цена № {{ index+1 }}</p>
+                    <button @click="removePrice(index)" type="button">
+                        <Icon class="text-3xl text-red-500" name="material-symbols:delete-forever-rounded"/>
+                    </button>
+                </div>
+                <FormKit :name="`Объём  ${index+1}`" v-model="productsForm.prices[index].volume" validation="required" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Объём" outer-class="w-full" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
+                <FormKit :name="`Цена ${index+1}`" v-model="productsForm.prices[index].price" validation="required|number" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Цена" outer-class="w-full" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
+            </div>
+            <button @click="addPrice()" type="button" class="px-4 py-2 border border-sky-500 hover:bg-sky-500 hover:text-white rounded-full w-fit text-center transition-all duration-500 text-sky-500 bg-transparent">Добавить объём</button>
+            <div class="flex flex-col gap-6 p-4 rounded-xl border w-full md:w-2/3 lg:w-1/2">
+                <p class="text-xl font-semibold font-mono text-[#131313]/80">Книжная пара</p>
+                <FormKit v-model="productsForm.book_pair.title" validation="required" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Наименование пары" name="Наименование пары" outer-class="w-full" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
+                <FormKit v-model="productsForm.book_pair.description" validation="required" messages-class="text-[#E9556D] font-mono" type="textarea" placeholder="Описание пары" name="Описание пары" outer-class="w-full" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
+            </div>
+            <button :disabled="isSubmitting" :class="isSubmitting ? 'opacity-50' : 'hover:text-sky-500 hover:bg-transparent'" type="submit" class="px-4 py-2 mt-10 border border-sky-500 bg-sky-500 text-white rounded-full w-fit text-center transition-all duration-500">
+                <span v-if="!isSubmitting">Добавить товар</span>
+                <span v-else>Добавление...</span>
+            </button>
+        </FormKit>
+
+        <!-- Редактирование товаров -->
+        <div class="flex flex-col gap-6">
+            <p class="mainHeading">Редактирование товаров</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="product in paginatedProducts" :key="product.id">
+                    <div class="flex items-center gap-4 self-end">
+                        <NuxtLink :to="`/admin/edit-${product.id}`">
+                            <Icon class="text-3xl text-amber-500" name="material-symbols:edit-outline" />
+                        </NuxtLink>
+                        <button :disabled="isDeleting" :class="{ 'opacity-50': isDeleting }" @click="deleteProduct(product.id)" class="transition-all duration-500">
+                            <Icon class="text-3xl text-red-500" name="material-symbols:delete-forever"/>
+                        </button>
+                    </div>
+                    <p><span class="font-semibold font-mono text-[#131313]/80">ID:</span> {{ product.id }}</p>            
+                    <p><span class="font-semibold font-mono text-[#131313]/80">Товар:</span> {{ product.name }}</p>            
+                </div>            
+            </div>
+
+            <!-- Пагинация товаров -->
+            <div v-if="totalProductsPages > 1" class="flex justify-center items-center gap-4 mt-4">
+                <button 
+                    @click="prevProductsPage" 
+                    :disabled="productsPage === 1"
+                    class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                >
+                    Назад
+                </button>
+                <span class="text-lg font-mono">{{ productsPage }} / {{ totalProductsPages }}</span>
+                <button 
+                    @click="nextProductsPage" 
+                    :disabled="productsPage === totalProductsPages"
+                    class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                >
+                    Вперёд
                 </button>
             </div>
-            <FormKit :name="`Объём  ${index+1}`" v-model="productsForm.prices[index].volume" validation="required" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Объём" outer-class="w-full" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
-            <FormKit :name="`Цена ${index+1}`" v-model="productsForm.prices[index].price" validation="required|number" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Цена" outer-class="w-full" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
         </div>
-        <button @click="addPrice()" type="button" class="px-4 py-2 border border-sky-500 hover:bg-sky-500 hover:text-white rounded-full w-fit text-center transition-all duration-500 text-sky-500 bg-transparent">Добавить объём</button>
-        <div class="flex flex-col gap-6 p-4 rounded-xl border w-full md:w-2/3 lg:w-1/2">
-            <p class="text-xl font-semibold font-mono text-[#131313]/80">Книжная пара</p>
-            <FormKit v-model="productsForm.book_pair.title" validation="required" messages-class="text-[#E9556D] font-mono" type="text" placeholder="Наименование пары" name="Наименование пары" outer-class="w-full" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
-            <FormKit v-model="productsForm.book_pair.description" validation="required" messages-class="text-[#E9556D] font-mono" type="textarea" placeholder="Описание пары" name="Описание пары" outer-class="w-full" input-class="focus:outline-none px-4 py-2 bg-white rounded-xl border border-transparent w-full transition-all duration-500 focus:border-sky-500 shadow-md"/>
-        </div>
-        <button :disabled="isSubmitting" :class="isSubmitting ? 'opacity-50' : 'hover:text-sky-500 hover:bg-transparent'" type="submit" class="px-4 py-2 mt-10 border border-sky-500 bg-sky-500 text-white rounded-full w-fit text-center transition-all duration-500">
-            <span v-if="!isSubmitting">Добавить товар</span>
-            <span v-else>Добавление...</span>
-        </button>
-    </FormKit>
 
-    <!-- Редактирование товаров -->
-<div class="flex flex-col gap-6">
-    <p class="mainHeading">Редактирование товаров</p>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="product in paginatedProducts" :key="product.id">
-            <div class="flex items-center gap-4 self-end">
-                <NuxtLink :to="`/admin/edit-${product.id}`">
-                    <Icon class="text-3xl text-amber-500" name="material-symbols:edit-outline" />
-                </NuxtLink>
-                <button :disabled="isDeleting" :class="{ 'opacity-50': isDeleting }" @click="deleteProduct(product.id)" class="transition-all duration-500">
-                    <Icon class="text-3xl text-red-500" name="material-symbols:delete-forever"/>
+        <!-- Статистика пользователей -->
+        <div class="flex flex-col gap-6 mt-10">
+            <p class="mainHeading">Статистика пользователей</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div v-for="u in paginatedUsers" :key="u.id" class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-2">
+                    <p class="font-semibold text-[#131313]/80">{{ u.surname }} {{ u.name }} {{ u.patronymic }}</p>
+                    <p class="text-sm text-[#131313]/80">ID: {{ u.id }}</p>
+                    <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
+                        <div>
+                            <div class="text-[#131313]/80">Уровень</div>
+                            <div class="font-semibold" :class="getLevelColor(userStats[u.id]?.client_level)">{{ userStats[u.id]?.client_level ?? 'Стандартный' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#131313]/80">Скидка</div>
+                            <div class="font-semibold">{{ userStats[u.id]?.discount_percent ?? 5 }}%</div>
+                        </div>
+                        <div>
+                            <div class="text-[#131313]/80">Покупок всего</div>
+                            <div class="font-semibold">{{ userStats[u.id]?.orders_count ?? 0 }}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#131313]/80">Потрачено</div>
+                            <div class="font-semibold">{{ Number(userStats[u.id]?.total_spent ?? 0).toLocaleString() }} ₽</div>
+                        </div>
+                        <div>
+                            <div class="text-[#131313]/80">В месяц</div>
+                            <div class="font-semibold">{{ userStats[u.id]?.avg_purchases_per_month ?? 0 }}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#131313]/80">Последняя покупка</div>
+                            <div class="font-semibold">{{ userStats[u.id]?.last_order_at ? new Date(userStats[u.id].last_order_at).toLocaleDateString('ru-RU') : '—' }}</div>
+                        </div>
+                        <div>
+                            <div class="text-[#131313]/80">Дней в сервисе</div>
+                            <div class="font-semibold">{{ userStats[u.id]?.days_in_service ?? 0 }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Пагинация статистики -->
+            <div v-if="!loadingUserStats && totalUserStatsPages > 1" class="flex justify-center items-center gap-4 mt-4">
+                <button 
+                    @click="prevUserStatsPage" 
+                    :disabled="userStatsPage === 1"
+                    class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                >
+                    Назад
+                </button>
+                <span class="text-lg font-mono">{{ userStatsPage }} / {{ totalUserStatsPages }}</span>
+                <button 
+                    @click="nextUserStatsPage" 
+                    :disabled="userStatsPage === totalUserStatsPages"
+                    class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                >
+                    Вперёд
                 </button>
             </div>
-            <p><span class="font-semibold font-mono text-[#131313]/80">ID:</span> {{ product.id }}</p>            
-            <p><span class="font-semibold font-mono text-[#131313]/80">Товар:</span> {{ product.name }}</p>            
-        </div>            
-    </div>
-
-    <!-- Пагинация товаров -->
-    <div v-if="totalProductsPages > 1" class="flex justify-center items-center gap-4 mt-4">
-        <button 
-            @click="prevProductsPage" 
-            :disabled="productsPage === 1"
-            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-        >
-            Назад
-        </button>
-        <span class="text-lg font-mono">{{ productsPage }} / {{ totalProductsPages }}</span>
-        <button 
-            @click="nextProductsPage" 
-            :disabled="productsPage === totalProductsPages"
-            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-        >
-            Вперёд
-        </button>
-    </div>
-</div>
-
-<!-- Статистика пользователей -->
-<div class="flex flex-col gap-6 mt-10">
-    <p class="mainHeading">Статистика пользователей</p>
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div v-for="u in paginatedUsers" :key="u.id" class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-2">
-            <p class="font-semibold text-[#131313]/80">{{ u.surname }} {{ u.name }} {{ u.patronymic }}</p>
-            <p class="text-sm text-[#131313]/80">ID: {{ u.id }}</p>
-             <div class="mt-3 grid grid-cols-2 gap-3 text-sm">
-                 <div>
-                     <div class="text-[#131313]/80">Уровень</div>
-                     <div class="font-semibold" :class="getLevelColor(userStats[u.id]?.client_level)">{{ userStats[u.id]?.client_level ?? 'Стандартный' }}</div>
-                 </div>
-                 <div>
-                     <div class="text-[#131313]/80">Скидка</div>
-                     <div class="font-semibold">{{ userStats[u.id]?.discount_percent ?? 5 }}%</div>
-                 </div>
-                <div>
-                    <div class="text-[#131313]/80">Покупок всего</div>
-                    <div class="font-semibold">{{ userStats[u.id]?.orders_count ?? 0 }}</div>
-                </div>
-                <div>
-                    <div class="text-[#131313]/80">Потрачено</div>
-                    <div class="font-semibold">{{ Number(userStats[u.id]?.total_spent ?? 0).toLocaleString() }} ₽</div>
-                </div>
-                <div>
-                    <div class="text-[#131313]/80">В месяц</div>
-                    <div class="font-semibold">{{ userStats[u.id]?.avg_purchases_per_month ?? 0 }}</div>
-                </div>
-                <div>
-                    <div class="text-[#131313]/80">Последняя покупка</div>
-                    <div class="font-semibold">{{ userStats[u.id]?.last_order_at ? new Date(userStats[u.id].last_order_at).toLocaleDateString('ru-RU') : '—' }}</div>
-                </div>
-                <div>
-                    <div class="text-[#131313]/80">Дней в сервисе</div>
-                    <div class="font-semibold">{{ userStats[u.id]?.days_in_service ?? 0 }}</div>
-                </div>
-            </div>
         </div>
     </div>
-
-    <!-- Пагинация статистики -->
-    <div v-if="!loadingUserStats && totalUserStatsPages > 1" class="flex justify-center items-center gap-4 mt-4">
-        <button 
-            @click="prevUserStatsPage" 
-            :disabled="userStatsPage === 1"
-            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-        >
-            Назад
-        </button>
-        <span class="text-lg font-mono">{{ userStatsPage }} / {{ totalUserStatsPages }}</span>
-        <button 
-            @click="nextUserStatsPage" 
-            :disabled="userStatsPage === totalUserStatsPages"
-            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-        >
-            Вперёд
-        </button>
-    </div>
-</div>
 </template>
 
 <script setup>
@@ -153,6 +156,8 @@ const supabase = useSupabaseClient()
 
 const products = ref([])
 const productsNames = ref([])
+const isPageLoading = ref(true)
+
 const loadProducts = async () => {
     try {
         const { data, error } = await supabase
@@ -168,13 +173,16 @@ const loadProducts = async () => {
     } catch (error) {
         console.error('Ошибка загрузки:', error)
         showMessage('Не удалось загрузить данные', false)
+    } finally {
+        isPageLoading.value = false
     }
 }
 
 
 /* инициализация */
-onMounted(() => {
-    loadProducts()
+onMounted(async () => {
+    await loadProducts()
+    await loadNonAdminUsers()
 })
 
 
@@ -247,10 +255,6 @@ const computeStatsForUsers = async () => {
 
 watch(nonAdminUsers, async (list) => {
     if (list && list.length) await computeStatsForUsers()
-})
-
-onMounted(async () => {
-    await loadNonAdminUsers()
 })
 
 /* добавление данных */

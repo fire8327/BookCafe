@@ -1,5 +1,6 @@
 <template>
-    <div class="flex flex-col gap-6 w-full" v-for="product in products">
+    <Loader v-if="isLoading"/>
+    <div v-else class="flex flex-col gap-6 w-full" v-for="product in products">
         <div class="flex items-center text-sm gap-2 font-medium">
             <NuxtLink to="/catalog" class="transition-all duration-500 hover:text-sky-600">Меню</NuxtLink>
             <p>/</p>
@@ -41,7 +42,7 @@
             </div>
         </div>
     </div>
-    <div class="flex flex-col gap-6">
+    <div v-if="!isLoading" class="flex flex-col gap-6">
         <p class="mainHeading">Рекомендуем также</p>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <NuxtLink :to="`/catalog/product-${product.id}`" class="flex flex-col rounded-xl overflow-hidden shadow-md transition-all duration-500 group hover:-translate-y-2" v-for="product in randomProducts">
@@ -72,17 +73,22 @@ const route = useRoute()
 const supabase = useSupabaseClient()
 
 const products = ref([])
+const isLoading = ref(true)
 
 // загрузка товаров
 const loadProducts = async () => {
-  const { data } = await supabase.from('products').select('*').eq('id', route.params.id)
-  
-  products.value = data.map(product => ({
-    ...product,
-    prices: typeof product.prices === 'string' ? JSON.parse(product.prices) : product.prices,
-    selectedVolume: product.prices[0]?.volume || '',
-    selectedPrice: product.prices[0]?.price || 0
-  }))
+  try {
+    const { data } = await supabase.from('products').select('*').eq('id', route.params.id)
+    
+    products.value = data.map(product => ({
+      ...product,
+      prices: typeof product.prices === 'string' ? JSON.parse(product.prices) : product.prices,
+      selectedVolume: product.prices[0]?.volume || '',
+      selectedPrice: product.prices[0]?.price || 0
+    }))
+  } finally {
+    isLoading.value = false
+  }
 }
 
 onMounted(() => {
