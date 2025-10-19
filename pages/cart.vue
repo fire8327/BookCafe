@@ -31,12 +31,13 @@
                 <div class="flex flex-col gap-2 font-medium p-4 rounded-xl bg-white shadow-md">
                     <p v-for="cart in carts">{{ cart.products.name }}</p>
                     <p class="text-xl w-full font-semibold"><span class="font-mono">Итого: </span> {{ total.toLocaleString() }} ₽</p>
-                    <p v-if="discountPercent > 0" class="text-sm text-emerald-600">
-                        Скидка {{ discountPercent }}%
-                    </p>
-                    <p class="text-xl w-full font-semibold" v-if="discountPercent > 0">
-                        <span class="font-mono">К оплате:</span> {{ totalWithDiscount.toLocaleString() }} ₽
-                    </p>
+                    <template v-if="discountPercent > 0">
+                        <p class="text-sm text-emerald-600">Скидка {{ discountPercent }}%</p>
+                        <p class="text-sm text-[#131313]/60">Вы экономите: −{{ discountAmount.toLocaleString() }} ₽</p>
+                        <p class="text-xl w-full font-semibold">
+                            <span class="font-mono">К оплате:</span> {{ totalWithDiscount.toLocaleString() }} ₽
+                        </p>
+                    </template>
                 </div>
                 <FormKit type="form" @submit="makeOrder" :actions="false" messages-class="hidden" form-class="flex flex-col gap-4 w-full items-center">
                     <div class="flex items-start gap-2 w-full">
@@ -48,7 +49,7 @@
                 </FormKit>
             </div>
         </div>
-        <div v-else class="flex flex-col gap-6 p-4 rounded-xl bg-white shadow-md w-full h-fit self-center text-center items-center grow">
+        <div v-else class="flex flex-col gap-6 p-4 rounded-xl bg-white shadow-md w-full h-fit self-center text-center items-center justify-center grow">
             <p class="mainHeading text-center">Ваша корзина пуста</p>
             <p class="tracking-widest max-w-xl font-mono">Кажется, вы еще не добавили товары в корзину. Не упустите шанс найти что-то особенное!</p>
             <NuxtLink to="/catalog" class="mx-auto px-4 py-2 border border-sky-500 text-sky-500 rounded-full w-[160px] text-center transition-all duration-500 hover:text-white hover:bg-sky-500">В каталог</NuxtLink>
@@ -108,11 +109,16 @@ onMounted(() => {
 const calculateTotal = () => {
     return carts.value.reduce((acc, { count, price }) => acc + count * price, 0)
 }
-const total = ref(calculateTotal())
-const totalWithDiscount = computed(() => {
+const total = computed(() => calculateTotal())
+const discountAmount = computed(() => {
     const d = Number(discountPercent.value || 0)
     const t = Number(total.value || 0)
-    return Math.max(0, Math.round(t * (1 - d / 100)))
+    return Math.max(0, Math.round(t * d / 100))
+})
+const totalWithDiscount = computed(() => {
+    const t = Number(total.value || 0)
+    const s = Number(discountAmount.value || 0)
+    return Math.max(0, t - s)
 })
 
 const updateCount = async (newCount, id) => {
@@ -125,7 +131,7 @@ const updateCount = async (newCount, id) => {
     if(error) {
         showMessage("Произошла ошибка!", false)             
     } else {
-        total.value = calculateTotal()
+        // total пересчитается реактивно
         showMessage("Количество обновлено!", true)  
     }
 }
@@ -185,5 +191,5 @@ const makeOrder = async () => {
         showMessage("Заказ успешно оформлен!", true)  
         router.push("/")
     }     
-} 
+}
 </script>

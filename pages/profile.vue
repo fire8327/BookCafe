@@ -22,15 +22,13 @@
     </div>
     <div class="flex flex-col gap-6" v-if="role === 'user' && !isPageLoading">
         <p class="mainHeading">Заказы</p>
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" v-if="carts">
-            <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="cart in carts">
-                <p><span class="font-semibold font-mono text-[#131313]/80">Id заказа:</span> {{ cart.id }}</p>
-                <p><span class="font-semibold font-mono text-[#131313]/80">ФИО:</span> {{ cart.users.surname }} {{ cart.users.name }} {{ cart.users.patronymic }}</p>
-                <p><span class="font-semibold font-mono text-[#131313]/80">Номер телефона:</span> {{ cart.users.phone }}</p>
-                <p><span class="font-semibold font-mono text-[#131313]/80">Продукт:</span> {{ cart.products.name }}</p>
-                <p><span class="font-semibold font-mono text-[#131313]/80">Количество:</span> {{ cart.count }}</p>                
-                <p><span class="font-semibold font-mono text-[#131313]/80">Объём:</span> {{ cart.volume }}</p>                
-                <p><span class="font-semibold font-mono text-[#131313]/80">Сумма заказа:</span> {{ (cart.count*cart.price).toLocaleString() }} ₽</p>                
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6" v-if="groupedOrders && groupedOrders.length">
+            <div class="flex flex-col bg-white rounded-xl overflow-hidden shadow-md p-4 transition-all duration-500 hover:-translate-y-4 text-lg" v-for="order in groupedOrders" :key="order.groupKey">
+                <p><span class="font-semibold font-mono text-[#131313]/80">Id заказа(ов):</span> {{ order.ids.join(', ') }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">Дата/время:</span> {{ new Date(order.createdAt).toLocaleString('ru-RU') }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">Позиций:</span> {{ order.items.length }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">Состав:</span> {{ order.items.map(i => `${i.products.name} ×${i.count}`).join(', ') }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">Сумма заказа:</span> {{ order.total.toLocaleString() }} ₽</p>
             </div>
         </div>
     </div>
@@ -267,6 +265,26 @@ onMounted(async () => {
   await loadUserData()
   initUserForm()
   statsStore.fetchStatsByUserId(id.value)
+})
+
+// Группировка заказов по минутам (отображение), без изменений в БД
+const groupedOrders = computed(() => {
+  const groups = new Map()
+  for (const row of carts.value) {
+    const t = new Date(row.created_at)
+    const key = new Date(t.getFullYear(), t.getMonth(), t.getDate(), t.getHours(), t.getMinutes()).getTime()
+    if (!groups.has(key)) groups.set(key, [])
+    groups.get(key).push(row)
+  }
+  const result = []
+  for (const [key, items] of groups.entries()) {
+    const total = items.reduce((acc, r) => acc + Number(r.price || 0) * Number(r.count || 0), 0)
+    const ids = items.map(r => r.id)
+    const createdAt = items[0]?.created_at ?? new Date(key).toISOString()
+    result.push({ groupKey: key, items, total, ids, createdAt })
+  }
+  // сортируем по времени возрастания
+  return result.sort((a, b) => a.groupKey - b.groupKey)
 })
 
 const formatCurrency = (v) =>
