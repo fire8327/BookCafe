@@ -27,7 +27,7 @@
                 <p><span class="font-semibold font-mono text-[#131313]/80">Id заказа(ов):</span> {{ order.ids.join(', ') }}</p>
                 <p><span class="font-semibold font-mono text-[#131313]/80">Дата/время:</span> {{ new Date(order.createdAt).toLocaleString('ru-RU') }}</p>
                 <p><span class="font-semibold font-mono text-[#131313]/80">Позиций:</span> {{ order.items.length }}</p>
-                <p><span class="font-semibold font-mono text-[#131313]/80">Состав:</span> {{ order.items.map(i => `${i.products.name} ×${i.count}`).join(', ') }}</p>
+                <p><span class="font-semibold font-mono text-[#131313]/80">Состав:</span> {{ order.items.map(i => `${i.products.name} ×${i.count} (${i.volume})`).join(', ') }}</p>
                 <p><span class="font-semibold font-mono text-[#131313]/80">Сумма заказа:</span> {{ order.total.toLocaleString() }} ₽</p>
             </div>
         </div>
@@ -307,43 +307,6 @@ const getNextLevel = (currentLevel) => {
     case 'Золотой': return 'максимального'
     default: return 'Серебряного'
   }
-}
-
-const getNextLevelThreshold = (currentLevel) => {
-  switch(currentLevel) {
-    case 'Стандартный': return 20001
-    case 'Серебряный': return 50001
-    case 'Золотой': return 50001 // Максимальный уровень
-    default: return 20001
-  }
-}
-
-const getCurrentLevelThreshold = (currentLevel) => {
-  switch(currentLevel) {
-    case 'Стандартный': return 0
-    case 'Серебряный': return 20001
-    case 'Золотой': return 50001
-    default: return 0
-  }
-}
-
-const getProgressPercentage = (totalSpent, currentLevel) => {
-  if (currentLevel === 'Золотой') return 100
-  
-  const current = getCurrentLevelThreshold(currentLevel)
-  const next = getNextLevelThreshold(currentLevel)
-  const spent = Math.min(totalSpent, next)
-  
-  const progress = ((spent - current) / (next - current)) * 100
-  return Math.max(0, Math.min(100, progress))
-}
-
-const getAmountToNextLevel = (totalSpent, currentLevel) => {
-  if (currentLevel === 'Золотой') return 0
-  
-  const next = getNextLevelThreshold(currentLevel)
-  const needed = next - totalSpent
-  return Math.max(0, needed)
 }
 
 const getProgressBarColor = (level) => {

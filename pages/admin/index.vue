@@ -246,12 +246,9 @@ const loadNonAdminUsers = async () => {
 const computeStatsForUsers = async () => {
     loadingUserStats.value = true
     try {
-        const results = {}
-        for (const u of nonAdminUsers.value) {
-            const s = await statsStore.fetchStatsByUserId(u.id)
-            results[u.id] = s
-        }
-        userStats.value = results
+        const ids = nonAdminUsers.value.map(u => u.id)
+        // Супер-быстрый путь: один запрос на все и расчёт в сторе
+        userStats.value = await statsStore.fetchStatsForUsersBulk(ids)
     } finally {
         loadingUserStats.value = false
     }

@@ -11,7 +11,83 @@ export const useStatsStore = defineStore('stats', () => {
         loading.value = false
     }
 
-    // Функция для получения статистики всех пользователей для расчета максимальных значений
+    // ===== Shared helpers (DRY) =====
+    // monthsBetween — утилита для расчёта числа месяцев между датами (минимум 1)
+    const monthsBetween = (start, end) => {
+        const s = new Date(start)
+        const e = new Date(end)
+        const years = e.getFullYear() - s.getFullYear()
+        const months = e.getMonth() - s.getMonth()
+        const total = years * 12 + months + (e.getDate() >= s.getDate() ? 0 : -1)
+        return Math.max(1, total)
+    }
+
+    // groupItemsByMinute — собирает позиции в «заказы» по минуте создания
+    const groupItemsByMinute = (rows) => {
+        const groups = new Map()
+        rows.forEach(item => {
+            const t = new Date(item.created_at)
+            const key = new Date(t.getFullYear(), t.getMonth(), t.getDate(), t.getHours(), t.getMinutes()).getTime()
+            if (!groups.has(key)) groups.set(key, [])
+            groups.get(key).push(item)
+        })
+        return Array.from(groups.values())
+    }
+
+    // computeUserAggregates — считает базовые агрегаты по позициям пользователя
+    const computeUserAggregates = (items) => {
+        const orders = groupItemsByMinute(items)
+        const ordersCount = orders.length
+        const totalSpent = items.reduce((acc, r) => acc + Number(r.price || 0) * Number(r.count || 0), 0)
+        const lastOrderAt = orders.length ? orders[orders.length - 1][0].created_at : null
+        const firstOrderAt = orders.length ? orders[0][0].created_at : null
+        const avgPurchasesPerMonth = ordersCount === 0 || !firstOrderAt
+            ? 0
+            : Math.round((ordersCount / monthsBetween(firstOrderAt, new Date())) * 100) / 100
+        const daysSinceLastOrder = lastOrderAt 
+            ? Math.floor((Date.now() - new Date(lastOrderAt).getTime()) / (1000 * 60 * 60 * 24))
+            : 999
+
+        return { ordersCount, totalSpent, lastOrderAt, firstOrderAt, avgPurchasesPerMonth, daysSinceLastOrder }
+    }
+
+    // computeKAndLevel — нормализация, расчёт K (ИПЛ), уровня и скидки
+    const computeKAndLevel = ({
+        totalSpent,
+        avgPurchasesPerMonth,
+        daysSinceLastOrder
+    }, {
+        maxTotalSpent,
+        maxAvgPurchasesPerMonth,
+        maxDaysSinceLastOrder
+    }) => {
+        const P1_norm = maxTotalSpent > 0 ? totalSpent / maxTotalSpent : 0
+        const P2_norm = maxAvgPurchasesPerMonth > 0 ? avgPurchasesPerMonth / maxAvgPurchasesPerMonth : 0
+        const P3_norm = maxDaysSinceLastOrder > 0 ? 1 - (daysSinceLastOrder / maxDaysSinceLastOrder) : 1
+
+        // Веса параметров (можно настроить)
+        const w1 = 0.5, w2 = 0.3, w3 = 0.2
+        const K = (w1 * P1_norm) + (w2 * P2_norm) + (w3 * P3_norm)
+
+        let discountPercent = 5
+        let clientLevel = 'Стандартный'
+        if (K >= 0.6) { discountPercent = 15; clientLevel = 'Золотой' }
+        else if (K >= 0.3) { discountPercent = 10; clientLevel = 'Серебряный' }
+
+        return {
+            loyalty_score: Math.round(K * 100) / 100,
+            discount_percent: discountPercent,
+            client_level: clientLevel,
+            loyalty_parameters: {
+                total_spent_norm: Math.round(P1_norm * 100) / 100,
+                frequency_norm: Math.round(P2_norm * 100) / 100,
+                freshness_norm: Math.round(P3_norm * 100) / 100
+            }
+        }
+    }
+
+    // Функция для получения базовой статистики по всем пользователям (медленный агрегатор)
+    // Назначение: собрать агрегаты, чтобы вычислить глобальные максимумы для нормализации
     const getAllUsersStats = async () => {
         try {
             const { data: allUsers, error: usersErr } = await supabase
@@ -34,50 +110,12 @@ export const useStatsStore = defineStore('stats', () => {
                 if (cartErr) continue
 
                 const paidItems = Array.isArray(cartRows) ? cartRows : []
-                
-                // Группируем позиции по заказам
-                const orderGroups = new Map()
-                paidItems.forEach(item => {
-                    const orderTime = new Date(item.created_at)
-                    const orderKey = new Date(orderTime.getFullYear(), orderTime.getMonth(), orderTime.getDate(), orderTime.getHours(), orderTime.getMinutes())
-                    
-                    if (!orderGroups.has(orderKey.getTime())) {
-                        orderGroups.set(orderKey.getTime(), [])
-                    }
-                    orderGroups.get(orderKey.getTime()).push(item)
-                })
 
-                const orders = Array.from(orderGroups.values())
-                const totalSpent = paidItems.reduce((acc, row) => {
-                    const price = Number(row?.price ?? 0)
-                    const count = Number(row?.count ?? 0)
-                    return acc + price * count
-                }, 0)
-
-                const lastOrderAt = orders.length ? orders[orders.length - 1][0].created_at : null
-                const firstOrderAt = orders.length ? orders[0][0].created_at : null
-
-                const monthsBetween = (start, end) => {
-                    const s = new Date(start)
-                    const e = new Date(end)
-                    const years = e.getFullYear() - s.getFullYear()
-                    const months = e.getMonth() - s.getMonth()
-                    const total = years * 12 + months + (e.getDate() >= s.getDate() ? 0 : -1)
-                    return Math.max(1, total)
-                }
-
-                const avgPurchasesPerMonth = orders.length === 0 || !firstOrderAt
-                    ? 0
-                    : Math.round((orders.length / monthsBetween(firstOrderAt, new Date())) * 100) / 100
-
-                const daysSinceLastOrder = lastOrderAt 
-                    ? Math.floor((Date.now() - new Date(lastOrderAt).getTime()) / (1000 * 60 * 60 * 24))
-                    : 999 // Если нет заказов, считаем очень большим числом
-
+                const agg = computeUserAggregates(paidItems)
                 allStats.push({
-                    totalSpent,
-                    avgPurchasesPerMonth,
-                    daysSinceLastOrder
+                    totalSpent: agg.totalSpent,
+                    avgPurchasesPerMonth: agg.avgPurchasesPerMonth,
+                    daysSinceLastOrder: agg.daysSinceLastOrder
                 })
             }
 
@@ -88,7 +126,99 @@ export const useStatsStore = defineStore('stats', () => {
         }
     }
 
-    const fetchStatsByUserId = async (userId) => {
+    // Быстрый расчёт статистики для набора пользователей одной выборкой
+    // fetchStatsForUsersBulk(userIds):
+    //   1) Одним запросом загружаем все оплаченные позиции для всех userIds
+    //   2) Группируем по пользователю и по минуте (как «один заказ»)
+    //   3) Считаем агрегаты, нормализуем, считаем ИПЛ и присваиваем уровень/скидку
+    const fetchStatsForUsersBulk = async (userIds) => {
+        if (!Array.isArray(userIds) || userIds.length === 0) return {}
+        // Загружаем все оплаченные позиции сразу по списку пользователей
+        const { data: cartRows, error: cartErr } = await supabase
+            .from('cart')
+            .select('id, userId, created_at, count, price, status')
+            .in('userId', userIds)
+            .eq('status', 'Оформлен')
+            .order('created_at', { ascending: true })
+
+        if (cartErr) throw cartErr
+
+        // byUser — Map<userId, rows[]>: сгруппированные позиции по пользователю
+        const byUser = new Map()
+        for (const row of (cartRows || [])) {
+            if (!byUser.has(row.userId)) byUser.set(row.userId, [])
+            byUser.get(row.userId).push(row)
+        }
+
+        const perUser = {} // временное хранилище агрегатов по каждому пользователю
+        const aggregates = [] // список агрегатов для вычисления максимумов нормализации
+
+        // Счёт по каждому пользователю
+        for (const [uid, items] of byUser.entries()) {
+            const agg = computeUserAggregates(items)
+            perUser[uid] = {
+                totalSpent: agg.totalSpent,
+                ordersCount: agg.ordersCount,
+                lastOrderAt: agg.lastOrderAt,
+                firstOrderAt: agg.firstOrderAt,
+                avgPurchasesPerMonth: agg.avgPurchasesPerMonth,
+                daysSinceLastOrder: agg.daysSinceLastOrder
+            }
+
+            aggregates.push({ totalSpent: agg.totalSpent, avgPurchasesPerMonth: agg.avgPurchasesPerMonth, daysSinceLastOrder: agg.daysSinceLastOrder })
+        }
+
+        // Нормализация: общие максимумы по набору пользователей
+        const maxTotalSpent = Math.max(0, ...aggregates.map(s => s.totalSpent))
+        const maxAvgPurchasesPerMonth = Math.max(0, ...aggregates.map(s => s.avgPurchasesPerMonth))
+        const maxDaysSinceLastOrder = Math.max(1, ...aggregates.map(s => s.daysSinceLastOrder))
+
+        // Добавляем K (ИПЛ), уровень и скидку каждому пользователю
+        const result = {}
+        for (const uid of Object.keys(perUser)) {
+            const u = perUser[uid]
+            // Нормализованные параметры: сумма, частота, «свежесть» (меньше дней — лучше)
+            const P1_norm = maxTotalSpent > 0 ? u.totalSpent / maxTotalSpent : 0
+            const P2_norm = maxAvgPurchasesPerMonth > 0 ? u.avgPurchasesPerMonth / maxAvgPurchasesPerMonth : 0
+            const P3_norm = maxDaysSinceLastOrder > 0 ? 1 - (u.daysSinceLastOrder / maxDaysSinceLastOrder) : 1
+
+            // Веса параметров (можно настроить): сумма 50%, частота 30%, свежесть 20%
+            const w1 = 0.5, w2 = 0.3, w3 = 0.2
+            // K — интегральный показатель лояльности (ИПЛ)
+            const K = (w1 * P1_norm) + (w2 * P2_norm) + (w3 * P3_norm)
+
+            let discountPercent = 5
+            let clientLevel = 'Стандартный'
+            // Пороговые значения уровней (можно настроить)
+            if (K >= 0.6) { discountPercent = 15; clientLevel = 'Золотой' }
+            else if (K >= 0.3) { discountPercent = 10; clientLevel = 'Серебряный' }
+
+            result[uid] = {
+                user_id: uid,
+                total_spent: u.totalSpent,
+                orders_count: u.ordersCount,
+                last_order_at: u.lastOrderAt,
+                avg_purchases_per_month: u.avgPurchasesPerMonth,
+                discount_percent: discountPercent,
+                client_level: clientLevel,
+                // ИПЛ и параметры
+                loyalty_score: Math.round(K * 100) / 100,
+                days_since_last_order: u.daysSinceLastOrder,
+                loyalty_parameters: {
+                    total_spent_norm: Math.round(P1_norm * 100) / 100,
+                    frequency_norm: Math.round(P2_norm * 100) / 100,
+                    freshness_norm: Math.round(P3_norm * 100) / 100
+                }
+            }
+        }
+
+        return result
+    }
+
+    // fetchStatsByUserId(userId, precomputedMaxes) — расчёт статистики по одному пользователю
+    // Если передать precomputedMaxes (maxTotalSpent, maxAvgPurchasesPerMonth, maxDaysSinceLastOrder),
+    //   то функция НЕ будет сканировать всех пользователей повторно — применит переданные максимумы
+    const fetchStatsByUserId = async (userId, precomputedMaxes) => {
         if (!userId) {
             error.value = 'userId is required'
             return null
@@ -117,87 +247,39 @@ export const useStatsStore = defineStore('stats', () => {
 
             const paidItems = Array.isArray(cartRows) ? cartRows : []
 
-            // Группируем позиции по заказам (по времени создания с точностью до минуты)
-            const orderGroups = new Map()
-            
-            paidItems.forEach(item => {
-                const orderTime = new Date(item.created_at)
-                // Округляем до минуты для группировки заказов
-                const orderKey = new Date(orderTime.getFullYear(), orderTime.getMonth(), orderTime.getDate(), orderTime.getHours(), orderTime.getMinutes())
-                
-                if (!orderGroups.has(orderKey.getTime())) {
-                    orderGroups.set(orderKey.getTime(), [])
-                }
-                orderGroups.get(orderKey.getTime()).push(item)
-            })
+            const agg = computeUserAggregates(paidItems)
+            const ordersCount = agg.ordersCount
+            const totalSpent = agg.totalSpent
+            const lastOrderAt = agg.lastOrderAt
+            const firstOrderAt = agg.firstOrderAt
+            const avgPurchasesPerMonth = agg.avgPurchasesPerMonth
 
-            const orders = Array.from(orderGroups.values())
-            const ordersCount = orders.length
+            // Получаем максимальные значения для нормализации
+            let maxTotalSpent
+            let maxAvgPurchasesPerMonth
+            let maxDaysSinceLastOrder
 
-            const totalSpent = paidItems.reduce((acc, row) => {
-                const price = Number(row?.price ?? 0)
-                const count = Number(row?.count ?? 0)
-                return acc + price * count
-            }, 0)
-
-            const lastOrderAt = orders.length
-                ? orders[orders.length - 1][0].created_at
-                : null
-
-            const firstOrderAt = orders.length
-                ? orders[0][0].created_at
-                : null
-
-            const monthsBetween = (start, end) => {
-                const s = new Date(start)
-                const e = new Date(end)
-                const years = e.getFullYear() - s.getFullYear()
-                const months = e.getMonth() - s.getMonth()
-                const total = years * 12 + months + (e.getDate() >= s.getDate() ? 0 : -1)
-                return Math.max(1, total)
+            if (precomputedMaxes && typeof precomputedMaxes === 'object') {
+                maxTotalSpent = Math.max(1, Number(precomputedMaxes.maxTotalSpent ?? totalSpent))
+                maxAvgPurchasesPerMonth = Math.max(1, Number(precomputedMaxes.maxAvgPurchasesPerMonth ?? avgPurchasesPerMonth))
+                maxDaysSinceLastOrder = Math.max(1, Number(precomputedMaxes.maxDaysSinceLastOrder ?? 1))
+            } else {
+                const allUsersStats = await getAllUsersStats()
+                maxTotalSpent = Math.max(1, ...allUsersStats.map(s => s.totalSpent), totalSpent)
+                maxAvgPurchasesPerMonth = Math.max(1, ...allUsersStats.map(s => s.avgPurchasesPerMonth), avgPurchasesPerMonth)
+                maxDaysSinceLastOrder = Math.max(1, ...allUsersStats.map(s => s.daysSinceLastOrder))
             }
-
-            const avgPurchasesPerMonth = ordersCount === 0 || !firstOrderAt
-                ? 0
-                : Math.round((ordersCount / monthsBetween(firstOrderAt, new Date())) * 100) / 100
-
-            // Получаем статистику всех пользователей для расчета максимальных значений
-            const allUsersStats = await getAllUsersStats()
-            
-            // Рассчитываем максимальные значения для нормализации
-            const maxTotalSpent = Math.max(...allUsersStats.map(s => s.totalSpent), totalSpent)
-            const maxAvgPurchasesPerMonth = Math.max(...allUsersStats.map(s => s.avgPurchasesPerMonth), avgPurchasesPerMonth)
-            const maxDaysSinceLastOrder = Math.max(...allUsersStats.map(s => s.daysSinceLastOrder), 999)
 
             // Рассчитываем дни с последней покупки
             const daysSinceLastOrder = lastOrderAt 
                 ? Math.floor((Date.now() - new Date(lastOrderAt).getTime()) / (1000 * 60 * 60 * 24))
                 : 999
 
-            // Нормализация параметров (от 0 до 1)
-            const P1_norm = maxTotalSpent > 0 ? totalSpent / maxTotalSpent : 0
-            const P2_norm = maxAvgPurchasesPerMonth > 0 ? avgPurchasesPerMonth / maxAvgPurchasesPerMonth : 0
-            const P3_norm = maxDaysSinceLastOrder > 0 ? 1 - (daysSinceLastOrder / maxDaysSinceLastOrder) : 1
-
-            // Веса параметров
-            const w1 = 0.5 // Общая сумма покупок
-            const w2 = 0.3 // Частота покупок
-            const w3 = 0.2 // Свежесть клиента
-
-            // Рассчитываем интегральный показатель лояльности (ИПЛ)
-            const K = (w1 * P1_norm) + (w2 * P2_norm) + (w3 * P3_norm)
-
-            // Определяем уровень и скидку на основе ИПЛ
-            let discountPercent = 5 // Стандартный
-            let clientLevel = 'Стандартный'
-            
-            if (K >= 0.6) {
-                discountPercent = 15
-                clientLevel = 'Золотой'
-            } else if (K >= 0.3) {
-                discountPercent = 10
-                clientLevel = 'Серебряный'
-            }
+            // Рассчитываем K, уровень и параметры (через общую функцию)
+            const { loyalty_score, discount_percent, client_level, loyalty_parameters } = computeKAndLevel(
+                { totalSpent, avgPurchasesPerMonth, daysSinceLastOrder },
+                { maxTotalSpent, maxAvgPurchasesPerMonth, maxDaysSinceLastOrder }
+            )
 
             const daysInService = userRow?.created_at
                 ? Math.max(0, Math.floor((Date.now() - new Date(userRow.created_at).getTime()) / (1000 * 60 * 60 * 24)))
@@ -209,17 +291,13 @@ export const useStatsStore = defineStore('stats', () => {
                 orders_count: ordersCount,
                 last_order_at: lastOrderAt,
                 avg_purchases_per_month: avgPurchasesPerMonth,
-                discount_percent: discountPercent,
-                client_level: clientLevel,
+                discount_percent,
+                client_level,
                 days_in_service: daysInService,
-                // Новые поля для ИПЛ
-                loyalty_score: Math.round(K * 100) / 100, // ИПЛ округленный до 2 знаков
+                // ИПЛ и нормализованные параметры
+                loyalty_score,
                 days_since_last_order: daysSinceLastOrder,
-                loyalty_parameters: {
-                    total_spent_norm: Math.round(P1_norm * 100) / 100,
-                    frequency_norm: Math.round(P2_norm * 100) / 100,
-                    freshness_norm: Math.round(P3_norm * 100) / 100
-                }
+                loyalty_parameters
             }
 
             return stats.value
@@ -231,7 +309,7 @@ export const useStatsStore = defineStore('stats', () => {
         }
     }
 
-    return { stats, loading, error, reset, fetchStatsByUserId, getAllUsersStats }
+    return { stats, loading, error, reset, fetchStatsByUserId, getAllUsersStats, fetchStatsForUsersBulk }
 })
 
 
