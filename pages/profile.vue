@@ -40,17 +40,95 @@
                 <div class="text-base text-[#131313]/80 font-semibold">Уровень клиента</div>
                 <div class="mt-1 text-2xl font-semibold" :class="getLevelColor(statsStore.stats.client_level)">{{ statsStore.stats.client_level }}</div>
                 
-                <!-- Прогресс-бар уровня -->
+                <!-- Интегральный показатель лояльности -->
                 <div class="mt-3">
                     <div class="flex justify-between text-xs text-[#131313]/60 mb-1">
-                        <span>Прогресс до {{ getNextLevel(statsStore.stats.client_level) }}</span>
-                        <span>{{ formatCurrency(statsStore.stats.total_spent) }} / {{ formatCurrency(getNextLevelThreshold(statsStore.stats.client_level)) }}</span>
+                        <span>Показатель лояльности</span>
+                        <span class="font-semibold">{{ statsStore.stats.loyalty_score || 0 }}</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="h-2 rounded-full transition-all duration-500" :class="getProgressBarColor(statsStore.stats.client_level)" :style="`width: ${getProgressPercentage(statsStore.stats.total_spent, statsStore.stats.client_level)}%`"></div>
+                    <div class="w-full bg-gray-200 rounded-full h-3 relative">
+                        <div class="h-3 rounded-full transition-all duration-500" :class="getProgressBarColor(statsStore.stats.client_level)" :style="`width: ${getLoyaltyProgressPercentage(statsStore.stats.loyalty_score)}%`"></div>
+                        <!-- Маркеры уровней -->
+                        <div class="absolute top-0 left-0 w-full h-3 flex justify-between items-center pointer-events-none">
+                            <div class="w-0.5 h-3 bg-white opacity-50" style="left: 30%"></div>
+                            <div class="w-0.5 h-3 bg-white opacity-50" style="left: 60%"></div>
+                        </div>
                     </div>
-                    <div class="text-xs text-[#131313]/60 mt-1">
-                        До {{ getNextLevel(statsStore.stats.client_level) }}: {{ formatCurrency(getAmountToNextLevel(statsStore.stats.total_spent, statsStore.stats.client_level)) }}
+                    <div class="text-xs text-[#131313]/60 mt-1" v-if="statsStore.stats.client_level !== 'Золотой'">
+                        До {{ getNextLevel(statsStore.stats.client_level) }}: {{ getLoyaltyScoreToNextLevel(statsStore.stats.loyalty_score, statsStore.stats.client_level) }}
+                    </div>
+                    <div class="text-xs text-yellow-600 font-semibold mt-1" v-else>
+                        🏆 Максимальный уровень достигнут!
+                    </div>
+                </div>
+
+                <!-- Детали системы лояльности -->
+                <div class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                    <div class="text-sm font-semibold text-[#131313]/90 mb-3 flex items-center gap-2">
+                        <Icon name="material-symbols:star" class="text-yellow-500" />
+                        Система лояльности
+                    </div>
+                    
+                    <!-- Объяснение параметров -->
+                    <div class="space-y-2 mb-3">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-[#131313]/70">💰 Сумма покупок</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 bg-gray-200 rounded-full h-1.5">
+                                    <div class="bg-green-500 h-1.5 rounded-full transition-all duration-500" :style="`width: ${Math.round((statsStore.stats.loyalty_parameters?.total_spent_norm || 0) * 100)}%`"></div>
+                                </div>
+                                <span class="font-semibold text-green-600">{{ Math.round((statsStore.stats.loyalty_parameters?.total_spent_norm || 0) * 100) }}%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-[#131313]/70">📅 Частота покупок</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 bg-gray-200 rounded-full h-1.5">
+                                    <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" :style="`width: ${Math.round((statsStore.stats.loyalty_parameters?.frequency_norm || 0) * 100)}%`"></div>
+                                </div>
+                                <span class="font-semibold text-blue-600">{{ Math.round((statsStore.stats.loyalty_parameters?.frequency_norm || 0) * 100) }}%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="text-[#131313]/70">⏰ Активность</span>
+                            <div class="flex items-center gap-2">
+                                <div class="w-16 bg-gray-200 rounded-full h-1.5">
+                                    <div class="bg-purple-500 h-1.5 rounded-full transition-all duration-500" :style="`width: ${Math.round((statsStore.stats.loyalty_parameters?.freshness_norm || 0) * 100)}%`"></div>
+                                </div>
+                                <span class="font-semibold text-purple-600">{{ Math.round((statsStore.stats.loyalty_parameters?.freshness_norm || 0) * 100) }}%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Уровни с визуальными индикаторами -->
+                    <div class="border-t border-blue-200 pt-3">
+                        <div class="text-xs text-[#131313]/70 mb-2">Уровни лояльности:</div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <div class="flex items-center gap-1" :class="statsStore.stats.client_level === 'Стандартный' ? 'text-blue-600 font-semibold' : 'text-gray-500'">
+                                <div class="w-2 h-2 rounded-full" :class="statsStore.stats.client_level === 'Стандартный' ? 'bg-blue-500' : 'bg-gray-300'"></div>
+                                <span>Стандартный (5%)</span>
+                            </div>
+                            <div class="flex items-center gap-1" :class="statsStore.stats.client_level === 'Серебряный' ? 'text-gray-600 font-semibold' : 'text-gray-500'">
+                                <div class="w-2 h-2 rounded-full" :class="statsStore.stats.client_level === 'Серебряный' ? 'bg-gray-500' : 'bg-gray-300'"></div>
+                                <span>Серебряный (10%)</span>
+                            </div>
+                            <div class="flex items-center gap-1" :class="statsStore.stats.client_level === 'Золотой' ? 'text-yellow-600 font-semibold' : 'text-gray-500'">
+                                <div class="w-2 h-2 rounded-full" :class="statsStore.stats.client_level === 'Золотой' ? 'bg-yellow-500' : 'bg-gray-300'"></div>
+                                <span>Золотой (15%)</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Простое объяснение -->
+                        <div class="mt-3 p-2 bg-white rounded border border-blue-100">
+                            <div class="text-xs text-[#131313]/80 font-medium mb-1">💡 Как повысить уровень:</div>
+                            <div class="text-xs text-[#131313]/60 space-y-1">
+                                <div>• Покупайте чаще и больше</div>
+                                <div>• Не забывайте про нас - делайте покупки регулярно</div>
+                                <div>• Чем выше ваш показатель, тем больше скидка!</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -256,6 +334,29 @@ const getProgressBarColor = (level) => {
     case 'Серебряный': return 'bg-gray-500'
     case 'Стандартный': return 'bg-blue-500'
     default: return 'bg-gray-500'
+  }
+}
+
+// Новые функции для работы с ИПЛ
+const getLoyaltyProgressPercentage = (loyaltyScore) => {
+  if (!loyaltyScore) return 0
+  return Math.min(100, (loyaltyScore / 1) * 100) // Максимальный ИПЛ = 1
+}
+
+const getLoyaltyScoreToNextLevel = (loyaltyScore, currentLevel) => {
+  if (!loyaltyScore) return '0.30'
+  
+  switch(currentLevel) {
+    case 'Стандартный': 
+      const toSilver = 0.3 - loyaltyScore
+      return toSilver > 0 ? toSilver.toFixed(2) : '0.00'
+    case 'Серебряный': 
+      const toGold = 0.6 - loyaltyScore
+      return toGold > 0 ? toGold.toFixed(2) : '0.00'
+    case 'Золотой': 
+      return 'достигнут!'
+    default: 
+      return '0.30'
   }
 }
 </script>

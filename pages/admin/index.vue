@@ -94,6 +94,10 @@
                             <div class="font-semibold">{{ userStats[u.id]?.discount_percent ?? 5 }}%</div>
                         </div>
                         <div>
+                            <div class="text-[#131313]/80">ИПЛ</div>
+                            <div class="font-semibold">{{ userStats[u.id]?.loyalty_score ?? 0 }}</div>
+                        </div>
+                        <div>
                             <div class="text-[#131313]/80">Покупок всего</div>
                             <div class="font-semibold">{{ userStats[u.id]?.orders_count ?? 0 }}</div>
                         </div>
@@ -110,8 +114,8 @@
                             <div class="font-semibold">{{ userStats[u.id]?.last_order_at ? new Date(userStats[u.id].last_order_at).toLocaleDateString('ru-RU') : '—' }}</div>
                         </div>
                         <div>
-                            <div class="text-[#131313]/80">Дней в сервисе</div>
-                            <div class="font-semibold">{{ userStats[u.id]?.days_in_service ?? 0 }}</div>
+                            <div class="text-[#131313]/80">Дней с последней покупки</div>
+                            <div class="font-semibold">{{ userStats[u.id]?.days_since_last_order ?? '—' }}</div>
                         </div>
                     </div>
                 </div>
