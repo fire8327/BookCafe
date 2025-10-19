@@ -46,7 +46,7 @@ export const useStatsStore = defineStore('stats', () => {
             : Math.round((ordersCount / monthsBetween(firstOrderAt, new Date())) * 100) / 100
         const daysSinceLastOrder = lastOrderAt 
             ? Math.floor((Date.now() - new Date(lastOrderAt).getTime()) / (1000 * 60 * 60 * 24))
-            : 999
+            : 0
 
         return { ordersCount, totalSpent, lastOrderAt, firstOrderAt, avgPurchasesPerMonth, daysSinceLastOrder }
     }
@@ -63,7 +63,9 @@ export const useStatsStore = defineStore('stats', () => {
     }) => {
         const P1_norm = maxTotalSpent > 0 ? totalSpent / maxTotalSpent : 0
         const P2_norm = maxAvgPurchasesPerMonth > 0 ? avgPurchasesPerMonth / maxAvgPurchasesPerMonth : 0
-        const P3_norm = maxDaysSinceLastOrder > 0 ? 1 - (daysSinceLastOrder / maxDaysSinceLastOrder) : 1
+        // P3: для пользователей без заказов (daysSinceLastOrder = 0) ставим максимальный балл (1.0)
+        // для остальных: 1 - (дни_с_последней_покупки / максимум_среди_всех_с_заказами)
+        const P3_norm = daysSinceLastOrder === 0 ? 1 : (maxDaysSinceLastOrder > 0 ? 1 - (daysSinceLastOrder / maxDaysSinceLastOrder) : 1)
 
         // Веса параметров (можно настроить)
         const w1 = 0.5, w2 = 0.3, w3 = 0.2
@@ -171,7 +173,8 @@ export const useStatsStore = defineStore('stats', () => {
         // Нормализация: общие максимумы по набору пользователей
         const maxTotalSpent = Math.max(0, ...aggregates.map(s => s.totalSpent))
         const maxAvgPurchasesPerMonth = Math.max(0, ...aggregates.map(s => s.avgPurchasesPerMonth))
-        const maxDaysSinceLastOrder = Math.max(1, ...aggregates.map(s => s.daysSinceLastOrder))
+        // Максимум только среди пользователей с заказами (daysSinceLastOrder > 0)
+        const maxDaysSinceLastOrder = Math.max(1, ...aggregates.filter(s => s.daysSinceLastOrder > 0).map(s => s.daysSinceLastOrder))
 
         // Добавляем K (ИПЛ), уровень и скидку каждому пользователю
         const result = {}
@@ -180,7 +183,9 @@ export const useStatsStore = defineStore('stats', () => {
             // Нормализованные параметры: сумма, частота, «свежесть» (меньше дней — лучше)
             const P1_norm = maxTotalSpent > 0 ? u.totalSpent / maxTotalSpent : 0
             const P2_norm = maxAvgPurchasesPerMonth > 0 ? u.avgPurchasesPerMonth / maxAvgPurchasesPerMonth : 0
-            const P3_norm = maxDaysSinceLastOrder > 0 ? 1 - (u.daysSinceLastOrder / maxDaysSinceLastOrder) : 1
+            // P3: для пользователей без заказов (daysSinceLastOrder = 0) ставим максимальный балл (1.0)
+            // для остальных: 1 - (дни_с_последней_покупки / максимум_среди_всех_с_заказами)
+            const P3_norm = u.daysSinceLastOrder === 0 ? 1 : (maxDaysSinceLastOrder > 0 ? 1 - (u.daysSinceLastOrder / maxDaysSinceLastOrder) : 1)
 
             // Веса параметров (можно настроить): сумма 50%, частота 30%, свежесть 20%
             const w1 = 0.5, w2 = 0.3, w3 = 0.2
@@ -267,13 +272,14 @@ export const useStatsStore = defineStore('stats', () => {
                 const allUsersStats = await getAllUsersStats()
                 maxTotalSpent = Math.max(1, ...allUsersStats.map(s => s.totalSpent), totalSpent)
                 maxAvgPurchasesPerMonth = Math.max(1, ...allUsersStats.map(s => s.avgPurchasesPerMonth), avgPurchasesPerMonth)
-                maxDaysSinceLastOrder = Math.max(1, ...allUsersStats.map(s => s.daysSinceLastOrder))
+                // Максимум только среди пользователей с заказами (daysSinceLastOrder > 0)
+                maxDaysSinceLastOrder = Math.max(1, ...allUsersStats.filter(s => s.daysSinceLastOrder > 0).map(s => s.daysSinceLastOrder))
             }
 
             // Рассчитываем дни с последней покупки
             const daysSinceLastOrder = lastOrderAt 
                 ? Math.floor((Date.now() - new Date(lastOrderAt).getTime()) / (1000 * 60 * 60 * 24))
-                : 999
+                : 0
 
             // Рассчитываем K, уровень и параметры (через общую функцию)
             const { loyalty_score, discount_percent, client_level, loyalty_parameters } = computeKAndLevel(
