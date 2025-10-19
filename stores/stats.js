@@ -171,10 +171,11 @@ export const useStatsStore = defineStore('stats', () => {
         }
 
         // Нормализация: общие максимумы по набору пользователей
-        const maxTotalSpent = Math.max(0, ...aggregates.map(s => s.totalSpent))
-        const maxAvgPurchasesPerMonth = Math.max(0, ...aggregates.map(s => s.avgPurchasesPerMonth))
-        // Максимум только среди пользователей с заказами (daysSinceLastOrder > 0)
-        const maxDaysSinceLastOrder = Math.max(1, ...aggregates.filter(s => s.daysSinceLastOrder > 0).map(s => s.daysSinceLastOrder))
+        const allUsersStats = await getAllUsersStats()
+        const maxTotalSpent = Math.max(1, ...allUsersStats.map(s => s.totalSpent))
+        const maxAvgPurchasesPerMonth = Math.max(1, ...allUsersStats.map(s => s.avgPurchasesPerMonth))
+        const maxDaysSinceLastOrder = Math.max(1, ...allUsersStats.filter(s => s.daysSinceLastOrder > 0).map(s => s.daysSinceLastOrder))
+
 
         // Добавляем K (ИПЛ), уровень и скидку каждому пользователю
         const result = {}
