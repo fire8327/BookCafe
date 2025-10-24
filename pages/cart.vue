@@ -188,6 +188,13 @@ const makeOrder = async () => {
     if(error) {
         showMessage("Произошла ошибка!", false)             
     } else {
+        // ИПЛ
+        try {
+            await statsStore.saveUserStatsToDB(id.value)
+        } catch (e) {
+            console.error('Ошибка обновления статистики:', e)
+        }
+        
         showMessage("Заказ успешно оформлен!", true)  
         router.push("/")
     }     

@@ -75,7 +75,7 @@
                                 <div class="w-16 bg-gray-200 rounded-full h-1.5">
                                     <div class="bg-green-500 h-1.5 rounded-full transition-all duration-500" :style="`width: ${Math.round((statsStore.stats.loyalty_parameters?.total_spent_norm || 0) * 100)}%`"></div>
                                 </div>
-                                <span class="font-semibold text-green-600">{{ Math.round((statsStore.stats.loyalty_parameters?.total_spent_norm || 0) * 100) }}%</span>
+                                <span class="font-semibold text-green-600">{{ Number(statsStore.stats.loyalty_parameters?.total_spent || 0).toLocaleString() }} ₽</span>
                             </div>
                         </div>
                         
@@ -85,7 +85,7 @@
                                 <div class="w-16 bg-gray-200 rounded-full h-1.5">
                                     <div class="bg-blue-500 h-1.5 rounded-full transition-all duration-500" :style="`width: ${Math.round((statsStore.stats.loyalty_parameters?.frequency_norm || 0) * 100)}%`"></div>
                                 </div>
-                                <span class="font-semibold text-blue-600">{{ Math.round((statsStore.stats.loyalty_parameters?.frequency_norm || 0) * 100) }}%</span>
+                                <span class="font-semibold text-blue-600">{{ Math.round(statsStore.stats.loyalty_parameters?.frequency || 0) }} дней</span>
                             </div>
                         </div>
                         
@@ -95,7 +95,7 @@
                                 <div class="w-16 bg-gray-200 rounded-full h-1.5">
                                     <div class="bg-purple-500 h-1.5 rounded-full transition-all duration-500" :style="`width: ${Math.round((statsStore.stats.loyalty_parameters?.freshness_norm || 0) * 100)}%`"></div>
                                 </div>
-                                <span class="font-semibold text-purple-600">{{ Math.round((statsStore.stats.loyalty_parameters?.freshness_norm || 0) * 100) }}%</span>
+                                <span class="font-semibold text-purple-600">{{ statsStore.stats.loyalty_parameters?.freshness || 0 }} дней</span>
                             </div>
                         </div>
                     </div>
@@ -264,7 +264,34 @@ const statsStore = useStatsStore()
 onMounted(async () => {
   await loadUserData()
   initUserForm()
-  statsStore.fetchStatsByUserId(id.value)
+  // Загружаем статистику из БД
+  let userStats = await statsStore.getUserStatsFromDB(id.value)
+  if (!userStats) {
+    // Если статистики нет в БД, рассчитываем и сохраняем
+    await statsStore.saveUserStatsToDB(id.value)
+    userStats = await statsStore.getUserStatsFromDB(id.value)
+  }
+  
+  // Загружаем статистику из БД в стор
+  if (userStats) {
+    statsStore.stats = {
+      user_id: userStats.user_id,
+      total_spent: userStats.total_spent,
+      orders_count: userStats.orders_count,
+      last_order_at: userStats.last_order_date,
+      purchase_frequency: userStats.purchase_frequency,
+      discount_percent: userStats.discount_percent,
+      client_level: userStats.client_level,
+      days_in_service: userStats.days_in_service,
+      loyalty_score: userStats.loyalty_score,
+      days_since_last_order: userStats.freshness_days,
+      loyalty_parameters: {
+        total_spent: userStats.p1_display,
+        frequency: userStats.p2_display,
+        freshness: userStats.p3_display
+      }
+    }
+  }
 })
 
 // Группировка заказов по минутам (отображение), без изменений в БД

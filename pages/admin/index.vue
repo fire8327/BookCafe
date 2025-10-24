@@ -106,8 +106,8 @@
                             <div class="font-semibold">{{ Number(userStats[u.id]?.total_spent ?? 0).toLocaleString() }} ₽</div>
                         </div>
                         <div>
-                            <div class="text-[#131313]/80">В месяц</div>
-                            <div class="font-semibold">{{ userStats[u.id]?.avg_purchases_per_month ?? 0 }}</div>
+                            <div class="text-[#131313]/80">Частота покупок</div>
+                            <div class="font-semibold">{{ Math.round(userStats[u.id]?.purchase_frequency ?? 0) }} дней</div>
                         </div>
                         <div>
                             <div class="text-[#131313]/80">Последняя покупка</div>
@@ -246,9 +246,63 @@ const loadNonAdminUsers = async () => {
 const computeStatsForUsers = async () => {
     loadingUserStats.value = true
     try {
-        const ids = nonAdminUsers.value.map(u => u.id)
-        // Супер-быстрый путь: один запрос на все и расчёт в сторе
-        userStats.value = await statsStore.fetchStatsForUsersBulk(ids)
+        // Загружаем статистику всех пользователей из БД
+        const allStatsFromDB = await statsStore.getAllUsersStatsFromDB()
+        
+        // Преобразуем в формат, совместимый с существующим кодом
+        userStats.value = {}
+        allStatsFromDB.forEach(stat => {
+            userStats.value[stat.user_id] = {
+                user_id: stat.user_id,
+                total_spent: stat.total_spent,
+                orders_count: stat.orders_count,
+                last_order_at: stat.last_order_date,
+                purchase_frequency: stat.purchase_frequency,
+                discount_percent: stat.discount_percent,
+                client_level: stat.client_level,
+                loyalty_score: stat.loyalty_score,
+                days_since_last_order: stat.freshness_days,
+                loyalty_parameters: {
+                    total_spent: stat.p1_display,
+                    frequency: stat.p2_display,
+                    freshness: stat.p3_display
+                }
+            }
+        })
+        
+        // Для пользователей без статистики в БД - рассчитываем и сохраняем
+        const userIdsInDB = allStatsFromDB.map(s => s.user_id)
+        const userIdsWithoutStats = nonAdminUsers.value
+            .filter(user => !userIdsInDB.includes(user.id))
+            .map(user => user.id)
+        
+        for (const userId of userIdsWithoutStats) {
+            try {
+                await statsStore.saveUserStatsToDB(userId)
+                // Обновляем статистику для этого пользователя
+                const userStat = await statsStore.getUserStatsFromDB(userId)
+                if (userStat) {
+                    userStats.value[userId] = {
+                        user_id: userId,
+                        total_spent: userStat.total_spent,
+                        orders_count: userStat.orders_count,
+                        last_order_at: userStat.last_order_date,
+                        purchase_frequency: userStat.purchase_frequency,
+                        discount_percent: userStat.discount_percent,
+                        client_level: userStat.client_level,
+                        loyalty_score: userStat.loyalty_score,
+                        days_since_last_order: userStat.freshness_days,
+                        loyalty_parameters: {
+                            total_spent: userStat.p1_display,
+                            frequency: userStat.p2_display,
+                            freshness: userStat.p3_display
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error(`Ошибка расчета статистики для пользователя ${userId}:`, e)
+            }
+        }
     } finally {
         loadingUserStats.value = false
     }
