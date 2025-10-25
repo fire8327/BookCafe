@@ -109,8 +109,8 @@ export const useStatsStore = defineStore('stats', () => {
         /* определение уровня и скидки по K */
             let discountPercent = 5
             let clientLevel = 'Стандартный'
-            if (K >= 0.6) { discountPercent = 15; clientLevel = 'Золотой' }
-            else if (K >= 0.3) { discountPercent = 10; clientLevel = 'Серебряный' }
+            if (K >= 15000) { discountPercent = 15; clientLevel = 'Золотой' }
+            else if (K >= 8000) { discountPercent = 10; clientLevel = 'Серебряный' }
 
         return {
             loyalty_score: Math.round(K * 100) / 100,
