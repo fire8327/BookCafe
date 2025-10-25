@@ -62,13 +62,13 @@
 
                 <!-- Детали системы лояльности -->
                 <div class="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                    <div class="text-sm font-semibold text-[#131313]/90 mb-3 flex items-center gap-2">
+                    <!-- <div class="text-sm font-semibold text-[#131313]/90 mb-3 flex items-center gap-2">
                         <Icon name="material-symbols:star" class="text-yellow-500" />
                         Система лояльности
-                    </div>
+                    </div> -->
                     
                     <!-- Объяснение параметров -->
-                    <div class="space-y-2 mb-3">
+                    <!-- <div class="space-y-2 mb-3 border-b border-blue-200">
                         <div class="flex items-center justify-between text-xs">
                             <span class="text-[#131313]/70">💰 Сумма покупок</span>
                             <div class="flex items-center gap-2">
@@ -98,10 +98,10 @@
                                 <span class="font-semibold text-purple-600">{{ statsStore.stats.loyalty_parameters?.freshness || 0 }} дней</span>
                             </div>
                         </div>
-                    </div>
+                    </div> -->
                     
                     <!-- Уровни с визуальными индикаторами -->
-                    <div class="border-t border-blue-200 pt-3">
+                    <div class="">
                         <div class="text-xs text-[#131313]/70 mb-2">Уровни лояльности:</div>
                         <div class="flex items-center gap-2 text-xs">
                             <div class="flex items-center gap-1" :class="statsStore.stats.client_level === 'Стандартный' ? 'text-blue-600 font-semibold' : 'text-gray-500'">
