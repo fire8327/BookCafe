@@ -145,8 +145,8 @@
                 <div class="mt-1 text-2xl font-semibold">{{ statsStore.stats.orders_count }}</div>
             </div>
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
-                <div class="text-base text-[#131313]/80 font-semibold">Покупок в месяц</div>
-                <div class="mt-1 text-2xl font-semibold">{{ statsStore.stats.avg_purchases_per_month }}</div>
+                <div class="text-base text-[#131313]/80 font-semibold">Средний чек</div>
+                <div class="mt-1 text-2xl font-semibold">{{ formatCurrency(avgOrderValue) }}</div>
             </div>
             <div class="rounded-xl bg-white shadow p-4 transition-all duration-500 hover:-translate-y-4">
                 <div class="text-base text-[#131313]/80 font-semibold">Последняя покупка</div>
@@ -261,6 +261,12 @@ const { logout } = useUserStore()
 /* логика статистики */
 const statsStore = useStatsStore()
 
+/* вычисление среднего чека */
+const avgOrderValue = computed(() => {
+  if (!statsStore.stats?.orders_count || !statsStore.stats?.total_spent) return 0
+  return Math.round(statsStore.stats.total_spent / statsStore.stats.orders_count)
+})
+
 onMounted(async () => {
   await loadUserData()
   initUserForm()
@@ -348,23 +354,23 @@ const getProgressBarColor = (level) => {
 // Новые функции для работы с ИПЛ
 const getLoyaltyProgressPercentage = (loyaltyScore) => {
   if (!loyaltyScore) return 0
-  return Math.min(100, (loyaltyScore / 1) * 100) // Максимальный ИПЛ = 1
+  return Math.min(100, (loyaltyScore / 15000) * 100) // Максимальный ИПЛ = 15000
 }
 
 const getLoyaltyScoreToNextLevel = (loyaltyScore, currentLevel) => {
-  if (!loyaltyScore) return '0.30'
+  if (!loyaltyScore) return '8000'
   
   switch(currentLevel) {
     case 'Стандартный': 
-      const toSilver = 0.3 - loyaltyScore
-      return toSilver > 0 ? toSilver.toFixed(2) : '0.00'
+      const toSilver = 8000 - loyaltyScore
+      return toSilver > 0 ? toSilver.toLocaleString() : '0'
     case 'Серебряный': 
-      const toGold = 0.6 - loyaltyScore
-      return toGold > 0 ? toGold.toFixed(2) : '0.00'
+      const toGold = 15000 - loyaltyScore
+      return toGold > 0 ? toGold.toLocaleString() : '0'
     case 'Золотой': 
       return 'достигнут!'
     default: 
-      return '0.30'
+      return '8000'
   }
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
     <Loader v-if="isLoading"/>
-    <div class="flex flex-col gap-14 md:gap-20 xl:gap-28">
+    <div v-else class="flex flex-col gap-14 md:gap-20 xl:gap-28">
         <div class="flex max-lg:flex-col gap-10" v-if="carts && carts.length>0">
             <div class="flex flex-col gap-6 lg:w-1/2">
                 <div class="flex items-center gap-4">
@@ -71,7 +71,7 @@ const { id } = storeToRefs(useUserStore())
 /* скидка / статистика */
 const statsStore = useStatsStore()
 onMounted(() => {
-    statsStore.fetchStatsByUserId(id.value)
+    statsStore.getUserStatsFromDB(id.value)
 })
 const discountPercent = computed(() => statsStore.stats?.discount_percent ?? 0)
 
