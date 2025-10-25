@@ -41,7 +41,7 @@
                 <!-- Интегральный показатель лояльности -->
                 <div class="mt-3">
                     <div class="flex justify-between text-xs text-[#131313]/60 mb-1">
-                        <span>Показатель лояльности</span>
+                        <span>Показатель лояльности (~50% от суммы покупок, читайте ниже как повысить уровень)</span>
                         <span class="font-semibold">{{ statsStore.stats.loyalty_score || 0 }}</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-3 relative">
