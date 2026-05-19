@@ -11,7 +11,7 @@
                 <div v-for="product in products"
                     class="w-full flex flex-col rounded-xl bg-white overflow-hidden transition-all duration-500 shadow-md group hover:shadow-lg hover:-translate-y-2">
                         <div class="relative">
-                            <img :src="`https://sojfmnpdhftqapdircew.supabase.co/storage/v1/object/public/images/products/${product.image}`" alt=""
+                            <img :src="`https://cihtcwqrhfzjpftnatlw.supabase.co/storage/v1/object/public/images/products/${product.image}` || 'https://i.pinimg.com/originals/27/b3/0f/27b30fc67f6c322fd2f66dfc545d2f0d.jpg'" alt=""
                                 class="aspect-[3/4] object-cover w-full transition-all duration-500 group-hover:scale-105">
                                 <div class="flex flex-col gap-2 absolute top-2 left-2">
                                     <div class="flex items-center gap-1 p-1 rounded-lg bg-gray-800">
