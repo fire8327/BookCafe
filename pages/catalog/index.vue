@@ -109,9 +109,6 @@ const changeVolume = (product, volume) => {
 }
 
 
-
-
-
 /* добавление в корзину и проверка входа */
 const { id, authenticated, role } = storeToRefs(useUserStore())
 const addCart = async (product) => {
