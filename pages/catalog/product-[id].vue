@@ -1,6 +1,6 @@
 <template>
-    <Loader v-if="isLoading"/>
-    <div v-else class="flex flex-col gap-6 w-full" v-for="product in products">
+    <Loader v-if="showLoader"/>
+    <div v-else class="flex flex-col gap-6 w-full" v-for="product in products" :key="product.id">
         <div class="flex items-center text-sm gap-2 font-medium">
             <NuxtLink to="/catalog" class="transition-all duration-500 hover:text-sky-600">Меню</NuxtLink>
             <p>/</p>
@@ -32,7 +32,7 @@
                 </div>
                 <div class="flex flex-col gap-2 p-4 bg-sky-50 border border-sky-200 rounded-lg">
                     <p class="font-semibold font-mono text-[#131313]/80">Книжная пара</p>
-                    <p>{{ product.book_pair.description }}</p>   
+                    <p>{{ product.book_pair.description }}</p>
                 </div>
                 <button v-if="authenticated && role === 'user'" @click="addCart(product)" class="cursor-pointer flex items-center gap-2 rounded-xl py-1.5 px-10 transition-all duration-500 bg-sky-600 hover:bg-sky-800 text-white w-fit">
                     <Icon class="text-2xl" name="material-symbols:add"/>
@@ -42,10 +42,17 @@
             </div>
         </div>
     </div>
-    <div v-if="!isLoading" class="flex flex-col gap-6">
+    <div v-if="!showLoader" class="flex flex-col gap-6">
         <p class="mainHeading">Рекомендуем также</p>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <NuxtLink :to="`/catalog/product-${product.id}`" class="flex flex-col rounded-xl overflow-hidden shadow-md transition-all duration-500 group hover:-translate-y-2" v-for="product in randomProducts">
+            <NuxtLink 
+                :to="`/catalog/product-${product.id}`"
+                @mouseenter="catalogStore.prefetchProduct(product.id)"
+                @focus="catalogStore.prefetchProduct(product.id)"
+                class="flex flex-col rounded-xl overflow-hidden shadow-md transition-all duration-500 group hover:-translate-y-2"
+                v-for="product in randomProducts"
+                :key="product.id"
+            >
                 <img :src="`/images/products/${product.image}`" alt="" class="w-full aspect-[7/8] object-cover">
                 <div class="flex flex-col gap-2 p-4 grow">
                     <span class="font-semibold font-mono text-[#131313]/80">{{ product.name }}</span>
@@ -55,6 +62,8 @@
         </div>
     </div>
 </template>
+
+
 
 <script setup>
 /* название и язык страницы */
@@ -70,39 +79,37 @@ const { showMessage } = useMessagesStore()
 
 /* подключение БД и роутер */
 const route = useRoute()
+const catalogStore = useCatalogStore()
+const { loading } = storeToRefs(catalogStore)
 const supabase = useSupabaseClient()
 
-const products = ref([])
-const isLoading = ref(true)
+const productId = computed(() => route.params.id)
 
-// загрузка товаров
-const loadProducts = async () => {
-  try {
-    const { data } = await supabase.from('products').select('*').eq('id', route.params.id)
-    
-    products.value = data.map(product => ({
-      ...product,
-      prices: typeof product.prices === 'string' ? JSON.parse(product.prices) : product.prices,
-      selectedVolume: product.prices[0]?.volume || '',
-      selectedPrice: product.prices[0]?.price || 0
-    }))
-  } finally {
-    isLoading.value = false
-  }
-}
-
-onMounted(() => {
-  loadProducts()
+const products = computed(() => {
+    const product = catalogStore.findById(productId.value)
+    return product ? [product] : []
 })
 
+const randomProducts = computed(() => catalogStore.getRecommendations(productId.value))
+
+const showLoader = computed(() => !products.value.length && loading.value)
+
+const loadProduct = () => catalogStore.ensureProduct(productId.value)
+
+watch(productId, loadProduct)
+
+onMounted(loadProduct)
+
+
 /* изменение объема */
+
 const changeVolume = (product, volume) => {
   const productIndex = products.value.findIndex(p => p.id === product.id)
   if (productIndex === -1) return
-  
+
   const priceOption = products.value[productIndex].prices.find(opt => opt.volume === volume)
   if (!priceOption) return
-  
+
   products.value[productIndex].selectedVolume = volume
   products.value[productIndex].selectedPrice = priceOption.price
 }
@@ -113,7 +120,7 @@ const { id, authenticated, role } = storeToRefs(useUserStore())
 const addCart = async (product) => {
     const { data: carts } = await supabase
     .from('cart')
-    .select(`*`)
+    .select('id, count')
     .eq('status', 'В корзине')
     .eq('userId', id.value)
     .eq('productId', product.id)
@@ -128,7 +135,7 @@ const addCart = async (product) => {
 
         showMessage("Количество обновлено!", true)
     } else {
-        const { data, error } = await supabase
+        const { error } = await supabase
         .from('cart')
         .insert([
             { userId: id.value, productId: product.id, status: 'В корзине', count: 1, price: product.selectedPrice, volume: product.selectedVolume},
@@ -142,16 +149,5 @@ const addCart = async (product) => {
         }
     }
 }
-
-
-/* рекомендации */
-const { data: allProducts, error:randomProductsError } = await supabase
-.from('products')
-.select('*')
-.neq('id', route.params.id)
-
-// Перемешиваем массив на клиенте
-const randomProducts = [...allProducts]
-.sort(() => Math.random() - 0.5)
-.slice(0, 4);
 </script>
+

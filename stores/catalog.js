@@ -54,6 +54,53 @@ export const useCatalogStore = defineStore('catalog', () => {
         return list.filter((p) => p.name?.toLowerCase().includes(q))
     }
 
+    const sameId = (a, b) => String(a) === String(b)
+
+    const findById = (id) => (allProducts.value ?? []).find((p) => sameId(p.id, id)) ?? null
+
+    const fetchOne = async (id) => {
+        const supabase = useSupabaseClient()
+        const { data, error } = await supabase
+            .from('products')
+            .select(CATALOG_COLUMNS)
+            .eq('id', id)
+
+        if (error) throw error
+        const normalized = normalizeCatalogProducts(data)
+        if (!normalized.length) return null
+
+        const product = normalized[0]
+        const list = allProducts.value ?? []
+        const index = list.findIndex((p) => sameId(p.id, id))
+        if (index === -1) {
+            allProducts.value = [...list, product]
+        } else {
+            list[index] = product
+        }
+        return product
+    }
+
+    const ensureProduct = async (id) => {
+        const cached = findById(id)
+        if (cached) return cached
+
+        await fetchAll()
+        const fromList = findById(id)
+        if (fromList) return fromList
+
+        return fetchOne(id)
+    }
+
+    const getRecommendations = (excludeId, count = 4) => {
+        const list = (allProducts.value ?? []).filter((p) => !sameId(p.id, excludeId))
+        return [...list].sort(() => Math.random() - 0.5).slice(0, count)
+    }
+
+    const prefetchProduct = (id) => {
+        if (findById(id)) return Promise.resolve(findById(id))
+        return ensureProduct(id)
+    }
+
     const invalidate = () => {
         allProducts.value = null
     }
@@ -64,6 +111,10 @@ export const useCatalogStore = defineStore('catalog', () => {
         hasCache,
         fetchAll,
         filterBySearch,
+        findById,
+        ensureProduct,
+        getRecommendations,
+        prefetchProduct,
         invalidate
     }
 })
