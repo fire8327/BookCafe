@@ -162,5 +162,5 @@ const addCart = async (product) => {
             showMessage("Добавлено в корзину!", true)
         }
     }
-}
+} 
 </script>
