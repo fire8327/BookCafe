@@ -7,8 +7,9 @@
 </template>
 
 <script setup>
-// Предзагрузка меню в фоне — при переходе на /catalog данные уже в памяти
+// Предзагрузка в фоне — при переходах данные уже в памяти
 onMounted(() => {
-    useCatalogStore().fetchAll()
+    useCatalogStore().fetchAll().catch(() => {})
+    useNewsStore().fetchAll().catch(() => {})
 })
 </script>

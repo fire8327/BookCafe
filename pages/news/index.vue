@@ -1,9 +1,17 @@
 <template>
-    <Loader v-if="isLoading"/>
+    <Loader v-if="showLoader"/>
     <div v-else class="flex flex-col gap-6">
         <p class="mainHeading">Новости</p>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <NuxtLink v-for="newCard in news" :to="`/news/new-${newCard.id}`" class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300 group">
+        <p v-if="loadError" class="text-center text-red-500">Не удалось загрузить новости. Попробуйте обновить страницу.</p>
+        <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <NuxtLink
+                v-for="newCard in newsList"
+                :key="newCard.id"
+                :to="`/news/new-${newCard.id}`"
+                @mouseenter="newsStore.prefetchItem(newCard.id)"
+                @focus="newsStore.prefetchItem(newCard.id)"
+                class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300 group"
+            >
                 <img src="/images/news/main.jpg" alt="" class="transition-all duration-500 group-hover:scale-110">
                 <div class="flex flex-col gap-4 p-6 grow">
                     <span class="text-2xl font-mono font-semibold text-[#131313]/80">{{ newCard.title }}</span>
@@ -23,26 +31,14 @@ useSeoMeta({
 })
 
 
-/* подключение БД и вывод данных */
-const supabase = useSupabaseClient()
+const newsStore = useNewsStore()
+const { loading, hasCache, error: loadError } = storeToRefs(newsStore)
 
-const news = ref([])
-const isLoading = ref(true)
+const newsList = computed(() => newsStore.allNews ?? [])
 
-const loadNews = async () => {
-  try {
-    const { data, error } = await supabase
-    .from('news')
-    .select("*")
-    
-    if (error) throw error
-    news.value = data || []
-  } finally {
-    isLoading.value = false
-  }
-}
+const showLoader = computed(() => loading.value && !hasCache.value)
 
 onMounted(() => {
-  loadNews()
+    newsStore.fetchAll().catch(() => {})
 })
 </script>

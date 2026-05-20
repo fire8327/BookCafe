@@ -14,7 +14,7 @@
                 </form>
                 <NuxtLink to="/catalog" @mouseenter="prefetchCatalog" @focus="prefetchCatalog" class="flex flex-col after:w-0 after:h-px after:bg-sky-500 after:transition-all after:duration-500 hover:after:w-full">Меню</NuxtLink>
                 <NuxtLink to="/about" class="flex flex-col after:w-0 after:h-px after:bg-sky-500 after:transition-all after:duration-500 hover:after:w-full">О нас</NuxtLink>
-                <NuxtLink to="/news" class="flex flex-col after:w-0 after:h-px after:bg-sky-500 after:transition-all after:duration-500 hover:after:w-full">Новости</NuxtLink>
+                <NuxtLink to="/news" @mouseenter="prefetchNews" @focus="prefetchNews" class="flex flex-col after:w-0 after:h-px after:bg-sky-500 after:transition-all after:duration-500 hover:after:w-full">Новости</NuxtLink>
                 <div class="flex items-center gap-2">
                     <NuxtLink to="/auth" class="transition-all duration-500 hover:opacity-70 flex">
                         <Icon class="text-3xl text-sky-500" name="material-symbols:person"/>
@@ -68,6 +68,10 @@ const { searchQuery } = storeToRefs(searchStore)
 
 const prefetchCatalog = () => {
     useCatalogStore().fetchAll()
+}
+
+const prefetchNews = () => {
+    useNewsStore().fetchAll().catch(() => {})
 }
 
 const handleSearch = () => {

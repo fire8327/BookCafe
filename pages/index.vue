@@ -105,11 +105,18 @@
     </div>
     <div class="flex flex-col gap-6">
         <p class="mainHeading">Последние новости</p>
-        <div v-if="isLoadingNews" class="flex justify-center items-center min-h-[300px]">
+        <div v-if="showNewsLoader" class="flex justify-center items-center min-h-[300px]">
             <Loader />
         </div>
         <div v-else class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <NuxtLink v-for="newCard in news" :to="`/news/new-${newCard.id}`" class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300 group">
+            <NuxtLink
+                v-for="newCard in latestNews"
+                :key="newCard.id"
+                :to="`/news/new-${newCard.id}`"
+                @mouseenter="newsStore.prefetchItem(newCard.id)"
+                @focus="newsStore.prefetchItem(newCard.id)"
+                class="flex flex-col gap-6 rounded-xl overflow-hidden shadow-md border border-gray-300 group"
+            >
                 <img src="/images/news/main.jpg" alt="" class="transition-all duration-500 group-hover:scale-110">
                 <div class="flex flex-col gap-4 p-6 grow">
                     <span class="text-2xl font-mono font-semibold text-[#131313]/80">{{ newCard.title }}</span>
@@ -161,7 +168,7 @@ const handleClick = (index) => {
   }
 }
 
-// Закрываем при клике вне области
+// закрываем при клике вне области
 const onClickOutside = (event) => {
   if (window.innerWidth >= 1024) return
   
@@ -179,28 +186,14 @@ onBeforeUnmount(() => {
 })
 
 
-/* подключение БД и вывод данных */
-const supabase = useSupabaseClient()
+/* новости из общего кэша */
+const newsStore = useNewsStore()
+const { loading: newsLoading, hasCache: newsHasCache } = storeToRefs(newsStore)
 
-const news = ref([])
-const isLoadingNews = ref(true)
-
-const loadNews = async () => {
-  try {
-    const { data, error } = await supabase
-    .from('news')
-    .select("*")
-    .order('id', {ascending: false})
-    .limit(3)
-    
-    if (error) throw error
-    news.value = data || []
-  } finally {
-    isLoadingNews.value = false
-  }
-}
+const latestNews = computed(() => newsStore.getLatest(3))
+const showNewsLoader = computed(() => newsLoading.value && !newsHasCache.value)
 
 onMounted(() => {
-  loadNews()
+  newsStore.fetchAll().catch(() => {})
 })
 </script>
