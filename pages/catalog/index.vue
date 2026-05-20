@@ -1,5 +1,5 @@
 <template>
-    <Loader v-if="isLoading"/>
+    <Loader v-if="showLoader"/>
     <div v-else class="flex flex-col gap-6 grow">
         <p class="mainHeading">Меню</p>     
         <div class="w-full">
@@ -7,8 +7,8 @@
                 <p>Результаты поиска: <span class="font-semibold">"{{ searchQuery }}"</span></p>
                 <button @click="clearSearchQuery" class="text-sky-600 hover:text-sky-800 text-sm mt-1">Сбросить поиск</button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" v-if="products">
-                <div v-for="product in products"
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" v-if="productsList.length">
+                <div v-for="product in productsList"
                     class="w-full flex flex-col rounded-xl bg-white overflow-hidden transition-all duration-500 shadow-md group hover:shadow-lg hover:-translate-y-2">
                         <div class="relative">
                             <img :src="`/images/products/${product.image}`" alt=""
@@ -17,17 +17,7 @@
                                     <div class="flex items-center gap-1 p-1 rounded-lg bg-gray-800">
                                         <Icon class="text-lg text-white" name="material-symbols:book-2-rounded" />
                                         <p class="text-xs font-medium text-white">{{ product.book_pair.title }}</p>
-                                    </div>
-                                    <p v-if="product.is_bestseller" class="w-fit bg-sky-500 text-white text-xs font-semibold py-1 px-4 rounded-full">Хит сезона</p>
-                                </div>
-                            <NuxtLink :to="`/catalog/product-${product.id}`"
-                                class="absolute bottom-2 right-2 text-white transition-all duration-500 hover:opacity-70">
-                                <Icon class="text-3xl" name="material-symbols:eye-tracking-rounded" />
-                            </NuxtLink>
-                        </div>
-                        <div class="flex flex-col gap-4 p-4 grow">
-                            <p class="text-xl font-mono font-semibold text-[#131313]/80">{{ product.name }}</p>
-                            <p class="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded-md w-fit mt-auto">{{ product.category }}</p>
+                                    </div>                                    <p v-if="product.is_bestseller" class="w-fit bg-sky-500 text-white text-xs font-semibold py-1 px-4 rounded-full">Хит сезона</p>                                </div>                            <NuxtLink :to="`/catalog/product-${product.id}`"                                class="absolute bottom-2 right-2 text-white transition-all duration-500 hover:opacity-70">                                <Icon class="text-3xl" name="material-symbols:eye-tracking-rounded" />                            </NuxtLink>                        </div>                        <div class="flex flex-col gap-4 p-4 grow">                            <p class="text-xl font-mono font-semibold text-[#131313]/80">{{ product.name }}</p>                            <p class="bg-sky-100 text-sky-800 text-xs px-2 py-1 rounded-md w-fit mt-auto">{{ product.category }}</p>
                             <p class="line-clamp-2">{{ product.description }}</p>
                             <div class="flex items-center gap-2">
                                 <button v-for="priceOption in product.prices" :key="priceOption.volume"
@@ -50,13 +40,14 @@
                         </div>
                 </div>
             </div>
-            <div v-if="products.length === 0" class="text-center">
+            <div v-if="!showLoader && productsList.length === 0" class="text-center">
                 <p v-if="searchQuery">Ничего не найдено по запросу "{{ searchQuery }}"</p>
                 <p v-else>Товары отсутствуют</p>
             </div>
         </div>
     </div>
 </template>
+
 
 <script setup>
 /* название и язык страницы */
@@ -70,47 +61,23 @@ useSeoMeta({
 const { showMessage } = useMessagesStore()
 
 
-/* подключение БД и храниилища */
+/* подключение БД и хранилища */
 const { searchQuery } = storeToRefs(useSearchStore())
 const { clearSearchQuery } = useSearchStore()
-
+const catalogStore = useCatalogStore()
+const { loading, hasCache } = storeToRefs(catalogStore)
 
 const supabase = useSupabaseClient()
 
-const products = ref([])
-const isLoading = ref(false)
+const productsList = computed(() => catalogStore.filterBySearch(searchQuery.value))
 
-// загрузка товаров
-const loadProducts = async () => {
-    isLoading.value = true   
 
-    let query = supabase.from('products').select('*').order('id', { ascending: true })
-
-    if (searchQuery.value) {
-      query = query.ilike('name', `%${searchQuery.value}%`)
-    }
-
-    const { data } = await query
-    
-    products.value = data.map(product => ({
-        ...product,
-        prices: typeof product.prices === 'string' ? JSON.parse(product.prices) : product.prices,
-        selectedVolume: product.prices[0]?.volume || '',
-        selectedPrice: product.prices[0]?.price || 0
-    }))
-
-    isLoading.value = false
-}
-
-// реакция на изменение поискового запроса
-watch(searchQuery, () => {
-  loadProducts()
-})
-
-// первоначальная загрузка
+// лоадер только при первой загрузке без кэша (повторный заход — сразу список)
+const showLoader = computed(() => loading.value && !hasCache.value)
 onMounted(() => {
-  loadProducts()
+    catalogStore.fetchAll()
 })
+
 
 // сброс поиска при уходе со страницы
 onBeforeUnmount(clearSearchQuery)
@@ -118,15 +85,18 @@ onBeforeUnmount(clearSearchQuery)
 
 /* изменение объема */
 const changeVolume = (product, volume) => {
-  const productIndex = products.value.findIndex(p => p.id === product.id)
+  const productIndex = productsList.value.findIndex(p => p.id === product.id)
   if (productIndex === -1) return
-  
-  const priceOption = products.value[productIndex].prices.find(opt => opt.volume === volume)
+
+  const priceOption = productsList.value[productIndex].prices.find(opt => opt.volume === volume)
   if (!priceOption) return
-  
-  products.value[productIndex].selectedVolume = volume
-  products.value[productIndex].selectedPrice = priceOption.price
+
+  productsList.value[productIndex].selectedVolume = volume
+  productsList.value[productIndex].selectedPrice = priceOption.price
 }
+
+
+
 
 
 /* добавление в корзину и проверка входа */
@@ -134,11 +104,12 @@ const { id, authenticated, role } = storeToRefs(useUserStore())
 const addCart = async (product) => {
     const { data: carts } = await supabase
     .from('cart')
-    .select(`*`)
+    .select('id, count')
     .eq('status', 'В корзине')
     .eq('userId', id.value)
     .eq('productId', product.id)
     .eq('volume', product.selectedVolume)
+
 
     if (carts && carts.length > 0) {
         await supabase
@@ -164,3 +135,4 @@ const addCart = async (product) => {
     }
 }
 </script>
+

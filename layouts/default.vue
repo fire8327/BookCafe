@@ -4,4 +4,11 @@
         <slot/>        
     </main>
    <!--  <Footer/> -->
-</template> 
+</template>
+
+<script setup>
+// Предзагрузка меню в фоне — при переходе на /catalog данные уже в памяти
+onMounted(() => {
+    useCatalogStore().fetchAll()
+})
+</script>
