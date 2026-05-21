@@ -11,7 +11,16 @@
                 <div v-for="product in products"
                     class="w-full flex flex-col rounded-xl bg-white overflow-hidden transition-all duration-500 shadow-md group hover:shadow-lg hover:-translate-y-2">
                         <div class="relative">
-                            <img :src="`/images/products/${product.image}`" alt=""
+                            <img 
+                                :src="`/images/products/${product.image}`"
+                                @error="(e) => {
+                                    if (!e.target.src.includes('supabase')) {
+                                        e.target.src = `https://azqznfnrbeoecpanzgsd.supabase.co/storage/v1/object/public/images/products/${product.image}`;
+                                    } else {
+                                        e.target.src = '/images/products/default.webp';
+                                    }
+                                }"
+                                alt=""
                                 class="aspect-[3/4] object-cover w-full transition-all duration-500 group-hover:scale-105">
                                 <div class="flex flex-col gap-2 absolute top-2 left-2">
                                     <div class="flex items-center gap-1 p-1 rounded-lg bg-gray-800">
